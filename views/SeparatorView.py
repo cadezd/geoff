@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os
+import os.path
 import re
 
 import flet as ft
@@ -9,6 +9,7 @@ from flet import MenuBar, SubmenuButton, Text, MenuItemButton, Column, Row, Cupe
     FilePickerFileType, FilePickerResultEvent, TextButton, Dropdown, TextField
 
 from componetns.DocumentPlaceholder import DocumentPlaceholder
+from controlers.FileSeparatorController import file_separator_controller
 
 
 class SeparatorView(Column):
@@ -17,6 +18,7 @@ class SeparatorView(Column):
         # Data
         self.page: ft.Page = page
         self.active_document_placeholder: DocumentPlaceholder | None = None
+        self.controller = file_separator_controller
 
         # Events
         self.page.on_keyboard_event = None
@@ -35,13 +37,46 @@ class SeparatorView(Column):
         self.page.overlay.append(self.file_picker_save)
 
         # Settings alert dialog
-        self.settings_regex_text_field: TextField = TextField(
-            value=r"(DPR|CE|DDB|DOV|PRO|PADNI|DNI|NRA|PDO|NPR|PRA)([0-9]{2})(\+|-|_)([0-9]{4})",
-            expand=True,
-            max_lines=2,
-            multiline=True,
-            on_change=self.check_regex
-        )
+        self.settings_inputs: dict[str, TextField | Dropdown] = {
+            "MASKA": Dropdown(
+                value=str(self.controller.settings["MASKA"]),
+                options=[ft.dropdown.Option(str(val)) for val in
+                         self.controller.valid_settings_values["MASKA"]],
+                expand=True,
+            ),
+            "ZOOM": Dropdown(
+                value=str(self.controller.settings["ZOOM"]),
+                options=[ft.dropdown.Option(str(val)) for val in
+                         self.controller.valid_settings_values["ZOOM"]],
+                expand=True,
+            ),
+            "DPI_IN": Dropdown(
+                value=str(self.controller.settings["DPI_IN"]),
+                options=[ft.dropdown.Option(str(val)) for val in
+                         self.controller.valid_settings_values["DPI_IN"]],
+                expand=True,
+            ),
+            "PODROCJE": Dropdown(
+                value=str(self.controller.settings["PODROCJE"]),
+                options=[ft.dropdown.Option(str(val)) for val in
+                         self.controller.valid_settings_values["PODROCJE"]],
+                expand=True,
+            ),
+            "BELOST": Dropdown(
+                value=str(self.controller.settings["BELOST"]),
+                options=[ft.dropdown.Option(str(val)) for val in
+                         self.controller.valid_settings_values["BELOST"]],
+                expand=True,
+            ),
+            "FILTER": TextField(
+                value=self.controller.settings["FILTER"],
+                expand=True,
+                max_lines=2,
+                multiline=True,
+                on_change=self.check_regex
+            ),
+        }
+
         self.settings_alert_dialog: ft.AlertDialog = ft.AlertDialog(
             modal=True,
             content=Column(
@@ -50,43 +85,30 @@ class SeparatorView(Column):
                 controls=[
                     Row([ft.Text("Nastavitve", size=26, weight=ft.FontWeight.BOLD)],
                         alignment=ft.MainAxisAlignment.CENTER),
-                    Row([ft.Text(f"{'MASKA:':<10}", size=18), Dropdown(value="250", options=[
-                        ft.dropdown.Option("150"),
-                        ft.dropdown.Option("175"),
-                        ft.dropdown.Option("200"),
-                        ft.dropdown.Option("225"),
-                        ft.dropdown.Option("250"),
-                    ], expand=True)]),
-                    Row([ft.Text(f"{'ZOOM:':<10}", size=18), Dropdown(value="1", options=[
-                        ft.dropdown.Option("1"),
-                        ft.dropdown.Option("2"),
-                        ft.dropdown.Option("3"),
-                    ], expand=True)]),
-                    Row([ft.Text(f"{'DPI_IN:':<10}", size=18), Dropdown(value="300", options=[
-                        ft.dropdown.Option("200"),
-                        ft.dropdown.Option("250"),
-                        ft.dropdown.Option("300"),
-                        ft.dropdown.Option("350"),
-                        ft.dropdown.Option("400"),
-                    ], expand=True)]),
-                    Row([ft.Text(f"{'PODROCJE:':<10}", size=18), Dropdown(value="0.3", options=[
-                        ft.dropdown.Option("0.1"),
-                        ft.dropdown.Option("0.2"),
-                        ft.dropdown.Option("0.3"),
-                        ft.dropdown.Option("0.4"),
-                        ft.dropdown.Option("0.5"),
-                        ft.dropdown.Option("0.7"),
-                        ft.dropdown.Option("0.8"),
-                        ft.dropdown.Option("0.9"),
-                        ft.dropdown.Option("1.0"),
-                    ], expand=True)]),
-                    Row([ft.Text(f"{'BELOST:':<10}", size=18), Dropdown(value="255", options=[
-                        ft.dropdown.Option("240"),
-                        ft.dropdown.Option("245"),
-                        ft.dropdown.Option("250"),
-                        ft.dropdown.Option("255"),
-                    ], expand=True)]),
-                    Row([ft.Text(f"{'FILTER:':<10}", size=18), self.settings_regex_text_field]),
+                    Row([
+                        ft.Text(f"{'MASKA:':<10}", size=18),
+                        self.settings_inputs["MASKA"],
+                    ]),
+                    Row([
+                        ft.Text(f"{'ZOOM:':<10}", size=18),
+                        self.settings_inputs["ZOOM"],
+                    ]),
+                    Row([
+                        ft.Text(f"{'DPI_IN:':<10}", size=18),
+                        self.settings_inputs["DPI_IN"],
+                    ]),
+                    Row([
+                        ft.Text(f"{'PODROCJE:':<10}", size=18),
+                        self.settings_inputs["PODROCJE"],
+                    ]),
+                    Row([
+                        ft.Text(f"{'BELOST:':<10}", size=18),
+                        self.settings_inputs["BELOST"],
+                    ]),
+                    Row([
+                        ft.Text(f"{'FILTER:':<10}", size=18),
+                        self.settings_inputs["FILTER"],
+                    ]),
                 ],
             ),
             actions=[
@@ -291,7 +313,7 @@ class SeparatorView(Column):
         )
 
         self.document_placeholders = []
-        for i in range(10):
+        for i in range(15):
             document_placeholder = DocumentPlaceholder(
                 page=self.page,
                 document_name=f"Document {i}",
@@ -300,6 +322,7 @@ class SeparatorView(Column):
                     os.path.join("..", "assets", "image1.jpg"),
                     os.path.join("..", "assets", "image2.jpg"),
                 ],
+                set_as_active=self.set_active_document_placeholder,
             )
 
             self.document_placeholders.append(document_placeholder)
@@ -384,6 +407,28 @@ class SeparatorView(Column):
             ),
         ]
 
+    def set_active_document_placeholder(self, document_placeholder: DocumentPlaceholder) -> None:
+        """
+        Set the active document placeholder
+        :param document_placeholder:
+        :return:
+        """
+        if self.active_document_placeholder:
+            self.active_document_placeholder.text_field.bgcolor = \
+                ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state(
+                    self.active_document_placeholder.text_field.value
+                ) else ft.colors.GREY_300
+            self.active_document_placeholder.images_row_container.bgcolor = ft.colors.GREY_300
+            self.active_document_placeholder.update()
+
+        self.active_document_placeholder = document_placeholder
+        self.active_document_placeholder.text_field.bgcolor = \
+            ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state(
+                self.active_document_placeholder.text_field.value
+            ) else ft.colors.BLUE_GREY_100
+        self.active_document_placeholder.images_row_container.bgcolor = ft.colors.BLUE_GREY_100
+        self.active_document_placeholder.update()
+
     def check_regex(self, e: ControlEvent | None) -> None:
         """
         Check if the regex is valid
@@ -391,16 +436,16 @@ class SeparatorView(Column):
         :return:
         """
         try:
-            re.compile(self.settings_regex_text_field.value)
-            self.settings_regex_text_field.suffix_icon = None
-            self.settings_regex_text_field.error_text = None
-            self.settings_regex_text_field.bgcolor = ft.colors.WHITE
+            re.compile(self.settings_inputs["FILTER"].value)
+            self.settings_inputs["FILTER"].suffix_icon = None
+            self.settings_inputs["FILTER"].error_text = None
+            self.settings_inputs["FILTER"].bgcolor = ft.colors.WHITE
         except Exception as e:
-            self.settings_regex_text_field.suffix_icon = 'error'
-            self.settings_regex_text_field.error_text = 'Napaka v regularnem izrazu'
-            self.settings_regex_text_field.bgcolor = ft.colors.RED_200
+            self.settings_inputs["FILTER"].suffix_icon = 'error'
+            self.settings_inputs["FILTER"].error_text = 'Napaka v regularnem izrazu'
+            self.settings_inputs["FILTER"].bgcolor = ft.colors.RED_200
 
-        self.settings_regex_text_field.update()
+        self.settings_inputs["FILTER"].update()
 
     async def delete_selected_images(self, e: ControlEvent | None) -> None:
         """
@@ -455,7 +500,7 @@ class SeparatorView(Column):
             # If the empty document placeholder is active set active placeholder to None
             if self.active_document_placeholder == empty_document_placeholder:
                 self.active_document_placeholder = None
-                
+
             self.list_view.controls.remove(empty_document_placeholder)
             self.document_placeholders.remove(empty_document_placeholder)
 
