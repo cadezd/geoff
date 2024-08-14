@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import flet as ft
 from flet import UserControl, Column, Row, TextField, Container, Draggable, DragTarget, Image, ControlEvent
 
 
 class DocumentPlaceholder(UserControl):
-    def __init__(self, page: ft.Page, document_name: str, image_paths: list[str]) -> None:
+    def __init__(self, page: ft.Page, document_name: str, image_paths: list[str], set_as_active: Callable) -> None:
         super().__init__()
 
         # Data
         self.page = page
         self.document_name = document_name
         self.image_paths = image_paths
+        self.set_as_active = set_as_active
 
         self.selected_dragable_image_elements = []
         self.selected_image_paths = []
@@ -86,7 +89,7 @@ class DocumentPlaceholder(UserControl):
                 offset=ft.Offset(0, 2),
                 blur_style=ft.ShadowBlurStyle.NORMAL,
             ),
-            on_click=self.set_as_active_placeholder,
+            on_click=lambda e: self.set_as_active(self),
         )
 
     async def on_text_field_change(self, e: ControlEvent) -> None:
@@ -96,7 +99,7 @@ class DocumentPlaceholder(UserControl):
         :param e:
         :return:
         """
-        await self.set_as_active_placeholder(None)
+        await self.set_as_active(self)
         self.text_field.suffix_icon = 'error' if self.is_in_error_state(self.text_field.value) else 'edit'
         self.update()
 
@@ -106,7 +109,7 @@ class DocumentPlaceholder(UserControl):
         :param e:
         :return:
         """
-        await self.set_as_active_placeholder(None)
+        await self.set_as_active(self)
         self.text_field.suffix_icon = 'edit'
         self.update()
 
@@ -172,34 +175,6 @@ class DocumentPlaceholder(UserControl):
                 self.images_row.controls[i + step], self.images_row.controls[i]
 
         self.update()
-
-    async def set_as_active_placeholder(self, e: ControlEvent | None) -> None:
-        """
-        Set the active document placeholder in the parent component, so we can manipulate it
-        :param e:
-        :return:
-        """
-
-        # If there is an active document placeholder, change its background color back to normal
-        if self.parent.parent.parent.parent.active_document_placeholder:
-            # Based on the text field value, change the background color of text field to indicate the error state
-            # if the document name is not valid
-            self.parent.parent.parent.parent.active_document_placeholder.text_field.bgcolor = \
-                ft.colors.RED_200 if self.parent.parent.parent.parent.active_document_placeholder.is_in_error_state(
-                    self.parent.parent.parent.parent.active_document_placeholder.text_field.value
-                ) else ft.colors.GREY_300
-            # Set the background color of the images row container to normal and update the UI
-            self.parent.parent.parent.parent.active_document_placeholder.images_row_container.bgcolor = ft.colors.GREY_300
-            self.parent.parent.parent.parent.active_document_placeholder.update()
-
-        # Change the color of current document placeholder to indicate that it is active
-        self.text_field.bgcolor = ft.colors.RED_200 if self.is_in_error_state(
-            self.text_field.value
-        ) else ft.colors.BLUE_GREY_100
-        self.images_row_container.bgcolor = ft.colors.BLUE_GREY_100
-        # Set current document placeholder as active in the parent component and update the UI
-        self.parent.parent.parent.parent.active_document_placeholder = self
-        self.parent.parent.parent.parent.active_document_placeholder.update()
 
     def is_in_error_state(self, value) -> bool:
         """

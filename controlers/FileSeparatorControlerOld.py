@@ -20,6 +20,8 @@ class Seperator:
             "FILTER": r"(DPR|CE|DDB|DOV|PRO|PADNI|DNI|NRA|PDO|NPR|PRA)([0-9]{2})(\+|-|_)([0-9]{4})",
             "DEFAULT_SEPARATE": "QR koda",
         }
+
+
         self.load_settings()
 
         self.documents = []
