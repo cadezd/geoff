@@ -9,7 +9,7 @@ from flet import MenuBar, SubmenuButton, Text, MenuItemButton, Column, Row, Cupe
     FilePickerFileType, FilePickerResultEvent, TextButton, Dropdown, TextField
 
 from componetns.DocumentPlaceholder import DocumentPlaceholder
-from controlers.FileSeparatorController import file_separator_controller
+from controlers.FileSeparatorController import FileSeparatorController
 
 
 class SeparatorView(Column):
@@ -18,7 +18,7 @@ class SeparatorView(Column):
         # Data
         self.page: ft.Page = page
         self.active_document_placeholder: DocumentPlaceholder | None = None
-        self.controller = file_separator_controller
+        self.controller: FileSeparatorController = FileSeparatorController()
 
         # Events
         self.page.on_keyboard_event = None
@@ -73,7 +73,7 @@ class SeparatorView(Column):
                 expand=True,
                 max_lines=2,
                 multiline=True,
-                on_change=self.check_regex
+                on_change=self.check_regex,
             ),
         }
 
@@ -114,11 +114,11 @@ class SeparatorView(Column):
             actions=[
                 TextButton(
                     text="Prekliči",
-                    on_click=lambda e: self.page.close(self.settings_alert_dialog),
+                    on_click=self.on_cancel_settings,
                 ),
                 TextButton(
                     text="Shrani",
-                    on_click=lambda e: self.page.close(self.settings_alert_dialog),
+                    on_click=lambda e: self.page.run_thread(self.on_save_settings),
                 ),
             ],
         )
@@ -252,7 +252,7 @@ class SeparatorView(Column):
 
                 # Split by
                 CupertinoSlidingSegmentedButton(
-                    selected_index=0,
+                    selected_index=self.controller.settings["DEFAULT_SEPARATE"],
                     thumb_color=ft.colors.BLUE_400,
                     padding=4,
                     expand=True,
@@ -261,7 +261,8 @@ class SeparatorView(Column):
                         ft.Text("BAR koda"),
                     ],
                     height=40,
-                    tooltip="Ločevanje datotek po BAR ali QR kodi"
+                    tooltip="Ločevanje datotek po BAR ali QR kodi",
+                    on_change=lambda e: self.controller.set_setting("DEFAULT_SEPARATE", e.data),
                 )
             ],
         )
@@ -407,6 +408,69 @@ class SeparatorView(Column):
             ),
         ]
 
+    def on_cancel_settings(self, e: ControlEvent | None) -> None:
+        """
+        Close the settings alert dialog without saving the settings
+        :param e:
+        :return:
+        """
+        # Resets the settings inputs to the values from the controller
+        # And removes error text and styles
+        self.settings_inputs["MASKA"].value = str(self.controller.settings["MASKA"])
+        self.settings_inputs["ZOOM"].value = str(self.controller.settings["ZOOM"])
+        self.settings_inputs["DPI_IN"].value = str(self.controller.settings["DPI_IN"])
+        self.settings_inputs["PODROCJE"].value = str(self.controller.settings["PODROCJE"])
+        self.settings_inputs["BELOST"].value = str(self.controller.settings["BELOST"])
+        self.settings_inputs["FILTER"].value = self.controller.settings["FILTER"]
+        self.settings_inputs["FILTER"].error_text = None
+        self.settings_inputs["FILTER"].suffix_icon = None
+        self.settings_inputs["FILTER"].bgcolor = ft.colors.GREY_50
+
+        self.page.close(self.settings_alert_dialog)
+
+    def on_save_settings(self) -> None:
+        """
+        Save the settings to the file and close the settings alert dialog
+        :param e:
+        :return:
+        """
+
+        # Check if the filter is valid
+        if self.settings_inputs["FILTER"].error_text:
+            return
+
+        # Set the settings from the inputs to the controller
+        self.controller.set_setting("MASKA", int(self.settings_inputs["MASKA"].value))
+        self.controller.set_setting("ZOOM", int(self.settings_inputs["ZOOM"].value))
+        self.controller.set_setting("DPI_IN", int(self.settings_inputs["DPI_IN"].value))
+        self.controller.set_setting("PODROCJE", float(self.settings_inputs["PODROCJE"].value))
+        self.controller.set_setting("BELOST", int(self.settings_inputs["BELOST"].value))
+        self.controller.set_setting("FILTER", self.settings_inputs["FILTER"].value)
+
+        # Save the settings to the file
+        self.controller.save_settings()
+
+        # Close the settings alert dialog
+        self.page.close(self.settings_alert_dialog)
+
+    def check_regex(self, e: ControlEvent | None) -> None:
+        """
+        Check if the regex is valid
+        :param e:
+        :return:
+        """
+        try:
+            re.compile(self.settings_inputs["FILTER"].value)
+            self.settings_inputs["FILTER"].suffix_icon = None
+            self.settings_inputs["FILTER"].error_text = None
+            self.settings_inputs["FILTER"].bgcolor = ft.colors.GREY_100
+        except Exception as e:
+            self.settings_inputs["FILTER"].suffix_icon = 'error'
+            self.settings_inputs["FILTER"].error_text = 'Napaka v regularnem izrazu'
+            self.settings_inputs["FILTER"].bgcolor = ft.colors.RED_200
+
+        self.settings_inputs["FILTER"].update()
+
     def set_active_document_placeholder(self, document_placeholder: DocumentPlaceholder) -> None:
         """
         Set the active document placeholder
@@ -428,24 +492,6 @@ class SeparatorView(Column):
             ) else ft.colors.BLUE_GREY_100
         self.active_document_placeholder.images_row_container.bgcolor = ft.colors.BLUE_GREY_100
         self.active_document_placeholder.update()
-
-    def check_regex(self, e: ControlEvent | None) -> None:
-        """
-        Check if the regex is valid
-        :param e:
-        :return:
-        """
-        try:
-            re.compile(self.settings_inputs["FILTER"].value)
-            self.settings_inputs["FILTER"].suffix_icon = None
-            self.settings_inputs["FILTER"].error_text = None
-            self.settings_inputs["FILTER"].bgcolor = ft.colors.WHITE
-        except Exception as e:
-            self.settings_inputs["FILTER"].suffix_icon = 'error'
-            self.settings_inputs["FILTER"].error_text = 'Napaka v regularnem izrazu'
-            self.settings_inputs["FILTER"].bgcolor = ft.colors.RED_200
-
-        self.settings_inputs["FILTER"].update()
 
     async def delete_selected_images(self, e: ControlEvent | None) -> None:
         """
@@ -513,6 +559,7 @@ class SeparatorView(Column):
             page=self.page,
             document_name=f"NOV DOKUMENT",
             image_paths=selected_image_paths,
+            set_as_active=self.set_active_document_placeholder,
         )
 
         # Add the new document placeholder at the end of the list
