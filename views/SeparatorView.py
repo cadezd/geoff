@@ -637,9 +637,6 @@ class SeparatorView(Column):
         """
         for document_placeholder in self.document_placeholders:
             await document_placeholder.zoom_in()
-            document_placeholder.update()
-
-        self.page.update()
 
     async def zoom_out_all(self, e: ControlEvent | None) -> None:
         """
@@ -649,9 +646,6 @@ class SeparatorView(Column):
         """
         for document_placeholder in self.document_placeholders:
             await document_placeholder.zoom_out()
-            document_placeholder.update()
-
-        self.page.update()
 
     async def zoom_in_selected(self, e: ControlEvent | None) -> None:
         """
@@ -661,9 +655,6 @@ class SeparatorView(Column):
         """
         if self.active_document_placeholder:
             await self.active_document_placeholder.zoom_in()
-            self.active_document_placeholder.update()
-
-            self.page.update()
 
     async def zoom_out_selected(self, e: ControlEvent | None) -> None:
         """
@@ -673,9 +664,6 @@ class SeparatorView(Column):
         """
         if self.active_document_placeholder:
             await self.active_document_placeholder.zoom_out()
-            self.active_document_placeholder.update()
-
-            self.page.update()
 
     async def reset_zoom(self, e: ControlEvent | None) -> None:
         """
@@ -685,9 +673,6 @@ class SeparatorView(Column):
         """
         for document_placeholder in self.document_placeholders:
             await document_placeholder.reset_zoom()
-            document_placeholder.update()
-
-        self.page.update()
 
     async def on_keyboard(self, e: KeyboardEvent) -> None:
         """
@@ -728,8 +713,6 @@ class SeparatorView(Column):
         # Delete selected images if Delete is pressed
         if e.key == 'Delete':
             await self.delete_selected_images(None)
-
-        self.page.update()
 
     def on_clear_documents(self, e: ControlEvent | None) -> None:
         """
