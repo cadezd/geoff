@@ -39,7 +39,7 @@ class SeparatorView(Column):
         self.delete_documents_alert_dialog: ft.AlertDialog = ft.AlertDialog(
             modal=True,
             title=ft.Text("Potrditev izbrisa dokumentov", weight=ft.FontWeight.BOLD),
-            content=ft.Text("Ali ste prepričani, da želite izbrisati vse dokumente?", size=18),
+            content=ft.Text("Ali ste prepričani, da želite izbrisati vse dokumente?", size=16),
             actions=[
                 TextButton(
                     text="Prekliči",
@@ -48,6 +48,17 @@ class SeparatorView(Column):
                 TextButton(
                     text="Izbriši",
                     on_click=self.on_clear_documents,
+                ),
+            ]
+        )
+
+        # Alert dialog for notifying the user that the documents have been saved
+        self.save_documents_alert_dialog: ft.AlertDialog = ft.AlertDialog(
+            modal=True,
+            actions=[
+                TextButton(
+                    text="V redu",
+                    on_click=lambda e: self.page.close(self.save_documents_alert_dialog),
                 ),
             ]
         )
@@ -100,38 +111,37 @@ class SeparatorView(Column):
         }
         self.settings_alert_dialog: ft.AlertDialog = ft.AlertDialog(
             modal=True,
+            title=ft.Text("Nastavitve", text_align=ft.TextAlign.CENTER),
             content=Column(
                 width=500,
-                height=480,
+                height=450,
                 controls=[
-                    Row([ft.Text("Nastavitve", size=26, weight=ft.FontWeight.BOLD)],
-                        alignment=ft.MainAxisAlignment.CENTER),
                     Row([
-                        ft.Text(f"{'MASKA:':<10}", size=18),
+                        ft.Text(f"{'MASKA:':<10}", size=16),
                         self.settings_inputs["MASKA"],
                     ]),
                     Row([
-                        ft.Text(f"{'ZOOM:':<10}", size=18),
+                        ft.Text(f"{'ZOOM:':<10}", size=16),
                         self.settings_inputs["ZOOM"],
                     ]),
                     Row([
-                        ft.Text(f"{'DPI_IN:':<10}", size=18),
+                        ft.Text(f"{'DPI_IN:':<10}", size=16),
                         self.settings_inputs["DPI_IN"],
                     ]),
                     Row([
-                        ft.Text(f"{'PODROCJE:':<10}", size=18),
+                        ft.Text(f"{'PODROCJE:':<10}", size=16),
                         self.settings_inputs["PODROCJE"],
                     ]),
                     Row([
-                        ft.Text(f"{'BELOST:':<10}", size=18),
+                        ft.Text(f"{'BELOST:':<10}", size=16),
                         self.settings_inputs["BELOST"],
                     ]),
                     Row([
-                        ft.Text(f"{'DEFAULT_SEPARATE:':<10}", size=18),
+                        ft.Text(f"{'DEFAULT_SEPARATE:':<10}", size=16),
                         self.settings_inputs["DEFAULT_SEPARATE"],
                     ]),
                     Row([
-                        ft.Text(f"{'FILTER:':<10}", size=18),
+                        ft.Text(f"{'FILTER:':<10}", size=16),
                         self.settings_inputs["FILTER"],
                     ]),
                 ],
@@ -348,6 +358,7 @@ class SeparatorView(Column):
             value=file_separator_controller.progress,
             height=10,
             bgcolor=ft.colors.BLUE_200,
+            border_radius=5,
         )
         self.progress_bar_container: Container = Container(
             content=Column(
@@ -748,18 +759,31 @@ class SeparatorView(Column):
         if not e.path:
             return
 
-        # Save the grouped documents to the selected directory
-        file_separator_controller.save_documents(e.path)
+        try:
+            # Save the grouped documents to the selected directory
+            file_separator_controller.save_documents(e.path)
 
-        # Clear the grouped documents
-        file_separator_controller.clear_grouped_documents()
+            # Clear the grouped documents
+            file_separator_controller.clear_grouped_documents()
 
-        # Remove all document placeholders from the list view
-        self.list_view.controls.clear()
-        self.document_placeholders.clear()
+            # Remove all document placeholders from the list view
+            self.list_view.controls.clear()
+            self.document_placeholders.clear()
 
-        # Update the list view
-        self.list_view.update()
+            # Update the list view
+            self.list_view.update()
+
+            # Show the alert dialog that the documents have been saved
+            self.save_documents_alert_dialog.title = ft.Text("Dokumenti so bili shranjeni")
+            self.save_documents_alert_dialog.content = ft.Text("Dokumenti so bili uspešno shranjeni v izbrano mapo.",
+                                                               size=16)
+            self.page.open(self.save_documents_alert_dialog)
+
+        except Exception as e:
+            self.save_documents_alert_dialog.title = ft.Text(f"Napaka pri shranjevanju dokumentov!")
+            self.save_documents_alert_dialog.content = ft.Text(f"Pri shranjevanju dokumentov je prišlo do napake:\n{e}",
+                                                               size=16)
+            self.page.open(self.save_documents_alert_dialog)
 
     def on_import_files(self, e: FilePickerResultEvent) -> None:
         """
