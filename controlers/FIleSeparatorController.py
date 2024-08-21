@@ -243,4 +243,4 @@ class FileSeparatorController:
         pass
 
 
-file_separator_controller = FileSeparatorController()
+file_separator_controller = FileSeparatorController(settings_path=os.path.join("separator_settings", "settings.pkl"))
