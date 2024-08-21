@@ -35,6 +35,23 @@ class SeparatorView(Column):
         self.page.overlay.append(self.file_picker_import)
         self.page.overlay.append(self.file_picker_save)
 
+        # Alert dialog for confirming the the deletion of documents
+        self.delete_documents_alert_dialog: ft.AlertDialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Potrditev izbrisa dokumentov", weight=ft.FontWeight.BOLD),
+            content=ft.Text("Ali ste prepričani, da želite izbrisati vse dokumente?", size=18),
+            actions=[
+                TextButton(
+                    text="Prekliči",
+                    on_click=lambda e: self.page.close(self.delete_documents_alert_dialog),
+                ),
+                TextButton(
+                    text="Izbriši",
+                    on_click=self.on_clear_documents,
+                ),
+            ]
+        )
+
         # Settings alert dialog
         self.settings_inputs: dict[str, TextField | Dropdown] = {
             "MASKA": Dropdown(
@@ -81,7 +98,6 @@ class SeparatorView(Column):
                 on_change=self.check_regex,
             ),
         }
-
         self.settings_alert_dialog: ft.AlertDialog = ft.AlertDialog(
             modal=True,
             content=Column(
@@ -181,7 +197,7 @@ class SeparatorView(Column):
                             content=ft.Text("Odstrani"),
                             tooltip="Odstrani vse datoteke",
                             leading=ft.Icon(ft.icons.DELETE),
-                            on_click=self.on_clear_documents,
+                            on_click=lambda e: self.page.open(self.delete_documents_alert_dialog),
                         )
                     ]
                 ),
@@ -307,7 +323,7 @@ class SeparatorView(Column):
             icon=ft.icons.DELETE,
             tooltip="Odstrani vse datoteke",
             bgcolor=ft.colors.RED_200,
-            on_click=self.on_clear_documents,
+            on_click=lambda e: self.page.open(self.delete_documents_alert_dialog),
         )
 
         # Action buttons for the bottom row (Right side)
@@ -719,6 +735,8 @@ class SeparatorView(Column):
 
         # Update the list view
         self.list_view.update()
+
+        self.page.close(self.delete_documents_alert_dialog)
 
     def on_save_files(self, e: FilePickerResultEvent) -> None:
         """
