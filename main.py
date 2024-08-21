@@ -5,10 +5,10 @@ from App import App
 
 async def main(page: ft.Page) -> None:
     page.title = 'Simpos app'
-    page.window.width = 900
-    page.window.height = 600
-    page.window.min_width = 900
-    page.window.min_height = 600
+    page.window.width = 1000
+    page.window.height = 700
+    page.window.min_width = 1000
+    page.window.min_height = 700
     page.theme_mode = ft.ThemeMode.LIGHT
 
     app: App = App(page)
