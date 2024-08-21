@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import os.path
 import re
 
 import flet as ft
 from flet import MenuBar, SubmenuButton, Text, MenuItemButton, Column, Row, CupertinoSlidingSegmentedButton, ListView, \
     FloatingActionButton, ControlEvent, KeyboardEvent, GestureDetector, Container, TapEvent, Stack, Divider, FilePicker, \
-    FilePickerFileType, FilePickerResultEvent, TextButton, Dropdown, TextField
+    FilePickerFileType, FilePickerResultEvent, TextButton, Dropdown, TextField, ProgressBar
 
 from componetns.DocumentPlaceholder import DocumentPlaceholder
-from controlers.FileSeparatorController import FileSeparatorController
+from controlers.FileSeparatorController import file_separator_controller
 
 
 class SeparatorView(Column):
@@ -18,7 +17,7 @@ class SeparatorView(Column):
         # Data
         self.page: ft.Page = page
         self.active_document_placeholder: DocumentPlaceholder | None = None
-        self.controller: FileSeparatorController = FileSeparatorController()
+        self.document_placeholders = []
 
         # Events
         self.page.on_keyboard_event = None
@@ -27,11 +26,11 @@ class SeparatorView(Column):
         # Components
         # File picker for importing pdf files
         self.file_picker_import: FilePicker = FilePicker(
-            on_result=self.on_import_files,
+            on_result=lambda e: self.page.run_thread(self.on_import_files, e),
         )
         # File picker for saving pdf files
         self.file_picker_save: FilePicker = FilePicker(
-            on_result=lambda e: print("JEEEJ2"),
+            on_result=lambda e: self.page.run_thread(self.on_save_files, e),
         )
         self.page.overlay.append(self.file_picker_import)
         self.page.overlay.append(self.file_picker_save)
@@ -39,37 +38,43 @@ class SeparatorView(Column):
         # Settings alert dialog
         self.settings_inputs: dict[str, TextField | Dropdown] = {
             "MASKA": Dropdown(
-                value=str(self.controller.settings["MASKA"]),
+                value=str(file_separator_controller.settings["MASKA"]),
                 options=[ft.dropdown.Option(str(val)) for val in
-                         self.controller.valid_settings_values["MASKA"]],
+                         file_separator_controller.valid_settings_values["MASKA"]],
                 expand=True,
             ),
             "ZOOM": Dropdown(
-                value=str(self.controller.settings["ZOOM"]),
+                value=str(file_separator_controller.settings["ZOOM"]),
                 options=[ft.dropdown.Option(str(val)) for val in
-                         self.controller.valid_settings_values["ZOOM"]],
+                         file_separator_controller.valid_settings_values["ZOOM"]],
                 expand=True,
             ),
             "DPI_IN": Dropdown(
-                value=str(self.controller.settings["DPI_IN"]),
+                value=str(file_separator_controller.settings["DPI_IN"]),
                 options=[ft.dropdown.Option(str(val)) for val in
-                         self.controller.valid_settings_values["DPI_IN"]],
+                         file_separator_controller.valid_settings_values["DPI_IN"]],
                 expand=True,
             ),
             "PODROCJE": Dropdown(
-                value=str(self.controller.settings["PODROCJE"]),
+                value=str(file_separator_controller.settings["PODROCJE"]),
                 options=[ft.dropdown.Option(str(val)) for val in
-                         self.controller.valid_settings_values["PODROCJE"]],
+                         file_separator_controller.valid_settings_values["PODROCJE"]],
                 expand=True,
             ),
             "BELOST": Dropdown(
-                value=str(self.controller.settings["BELOST"]),
+                value=str(file_separator_controller.settings["BELOST"]),
                 options=[ft.dropdown.Option(str(val)) for val in
-                         self.controller.valid_settings_values["BELOST"]],
+                         file_separator_controller.valid_settings_values["BELOST"]],
+                expand=True,
+            ),
+            "DEFAULT_SEPARATE": Dropdown(
+                value=str(file_separator_controller.settings["DEFAULT_SEPARATE"]),
+                options=[ft.dropdown.Option(str(val)) for val in
+                         file_separator_controller.valid_settings_values["DEFAULT_SEPARATE"]],
                 expand=True,
             ),
             "FILTER": TextField(
-                value=self.controller.settings["FILTER"],
+                value=file_separator_controller.settings["FILTER"],
                 expand=True,
                 max_lines=2,
                 multiline=True,
@@ -81,7 +86,7 @@ class SeparatorView(Column):
             modal=True,
             content=Column(
                 width=500,
-                height=400,
+                height=480,
                 controls=[
                     Row([ft.Text("Nastavitve", size=26, weight=ft.FontWeight.BOLD)],
                         alignment=ft.MainAxisAlignment.CENTER),
@@ -104,6 +109,10 @@ class SeparatorView(Column):
                     Row([
                         ft.Text(f"{'BELOST:':<10}", size=18),
                         self.settings_inputs["BELOST"],
+                    ]),
+                    Row([
+                        ft.Text(f"{'DEFAULT_SEPARATE:':<10}", size=18),
+                        self.settings_inputs["DEFAULT_SEPARATE"],
                     ]),
                     Row([
                         ft.Text(f"{'FILTER:':<10}", size=18),
@@ -151,6 +160,7 @@ class SeparatorView(Column):
                             tooltip="Uvozi izbrane datoteke",
                             leading=ft.Icon(ft.icons.FILE_OPEN),
                             on_click=lambda e: self.file_picker_import.pick_files(
+                                dialog_title="Izberite eno ali več PDF datotek",
                                 allow_multiple=True,
                                 file_type=FilePickerFileType.CUSTOM,
                                 allowed_extensions=["pdf"]
@@ -161,7 +171,9 @@ class SeparatorView(Column):
                             content=ft.Text("Shrani"),
                             tooltip="Shrani datoteke v mapo",
                             leading=ft.Icon(ft.icons.SAVE),
-                            on_click=None
+                            on_click=lambda e: self.file_picker_save.get_directory_path(
+                                dialog_title="Izberite mapo za shranjevanje"
+                            ),
                         ),
                         Divider(height=2),
                         # Remove button
@@ -169,7 +181,7 @@ class SeparatorView(Column):
                             content=ft.Text("Odstrani"),
                             tooltip="Odstrani vse datoteke",
                             leading=ft.Icon(ft.icons.DELETE),
-                            on_click=None
+                            on_click=self.on_clear_documents,
                         )
                     ]
                 ),
@@ -252,7 +264,7 @@ class SeparatorView(Column):
 
                 # Split by
                 CupertinoSlidingSegmentedButton(
-                    selected_index=self.controller.settings["DEFAULT_SEPARATE"],
+                    selected_index=file_separator_controller.settings["DEFAULT_SEPARATE"],
                     thumb_color=ft.colors.BLUE_400,
                     padding=4,
                     expand=True,
@@ -262,7 +274,7 @@ class SeparatorView(Column):
                     ],
                     height=40,
                     tooltip="Ločevanje datotek po BAR ali QR kodi",
-                    on_change=lambda e: self.controller.set_setting("DEFAULT_SEPARATE", e.data),
+                    on_change=lambda e: file_separator_controller.set_setting("DEFAULT_SEPARATE", int(e.data)),
                 )
             ],
         )
@@ -287,13 +299,15 @@ class SeparatorView(Column):
             icon=ft.icons.SAVE,
             tooltip="Shrani datoteke v mapo",
             bgcolor=ft.colors.INDIGO_200,
-            on_click=None
+            on_click=lambda e: self.file_picker_save.get_directory_path(
+                dialog_title="Izberite mapo za shranjevanje"
+            ),
         )
         self.floating_action_button_remove: FloatingActionButton = FloatingActionButton(
             icon=ft.icons.DELETE,
             tooltip="Odstrani vse datoteke",
             bgcolor=ft.colors.RED_200,
-            on_click=None
+            on_click=self.on_clear_documents,
         )
 
         # Action buttons for the bottom row (Right side)
@@ -313,21 +327,20 @@ class SeparatorView(Column):
             on_click=self.reset_zoom,
         )
 
-        self.document_placeholders = []
-        for i in range(15):
-            document_placeholder = DocumentPlaceholder(
-                page=self.page,
-                document_name=f"Document {i}",
-                image_paths=[
-                    os.path.join("..", "assets", "image0.png"),
-                    os.path.join("..", "assets", "image1.jpg"),
-                    os.path.join("..", "assets", "image2.jpg"),
+        self.progress_bar: ProgressBar = ProgressBar(
+            value=file_separator_controller.progress,
+            height=10,
+            bgcolor=ft.colors.BLUE_200,
+        )
+        self.progress_bar_container: Container = Container(
+            content=Column(
+                controls=[
+                    ft.Text("Grupiram dokumente..."),
+                    self.progress_bar,
                 ],
-                set_as_active=self.set_active_document_placeholder,
-            )
-
-            self.document_placeholders.append(document_placeholder)
-            self.list_view.controls.append(document_placeholder)
+            ),
+            alignment=ft.alignment.bottom_center,
+        )
 
         self.context_menu: Container = Container(
             content=Container(
@@ -416,12 +429,12 @@ class SeparatorView(Column):
         """
         # Resets the settings inputs to the values from the controller
         # And removes error text and styles
-        self.settings_inputs["MASKA"].value = str(self.controller.settings["MASKA"])
-        self.settings_inputs["ZOOM"].value = str(self.controller.settings["ZOOM"])
-        self.settings_inputs["DPI_IN"].value = str(self.controller.settings["DPI_IN"])
-        self.settings_inputs["PODROCJE"].value = str(self.controller.settings["PODROCJE"])
-        self.settings_inputs["BELOST"].value = str(self.controller.settings["BELOST"])
-        self.settings_inputs["FILTER"].value = self.controller.settings["FILTER"]
+        self.settings_inputs["MASKA"].value = str(file_separator_controller.settings["MASKA"])
+        self.settings_inputs["ZOOM"].value = str(file_separator_controller.settings["ZOOM"])
+        self.settings_inputs["DPI_IN"].value = str(file_separator_controller.settings["DPI_IN"])
+        self.settings_inputs["PODROCJE"].value = str(file_separator_controller.settings["PODROCJE"])
+        self.settings_inputs["BELOST"].value = str(file_separator_controller.settings["BELOST"])
+        self.settings_inputs["FILTER"].value = file_separator_controller.settings["FILTER"]
         self.settings_inputs["FILTER"].error_text = None
         self.settings_inputs["FILTER"].suffix_icon = None
         self.settings_inputs["FILTER"].bgcolor = ft.colors.GREY_50
@@ -440,15 +453,20 @@ class SeparatorView(Column):
             return
 
         # Set the settings from the inputs to the controller
-        self.controller.set_setting("MASKA", int(self.settings_inputs["MASKA"].value))
-        self.controller.set_setting("ZOOM", int(self.settings_inputs["ZOOM"].value))
-        self.controller.set_setting("DPI_IN", int(self.settings_inputs["DPI_IN"].value))
-        self.controller.set_setting("PODROCJE", float(self.settings_inputs["PODROCJE"].value))
-        self.controller.set_setting("BELOST", int(self.settings_inputs["BELOST"].value))
-        self.controller.set_setting("FILTER", self.settings_inputs["FILTER"].value)
+        file_separator_controller.set_setting("MASKA", int(self.settings_inputs["MASKA"].value))
+        file_separator_controller.set_setting("ZOOM", int(self.settings_inputs["ZOOM"].value))
+        file_separator_controller.set_setting("DPI_IN", int(self.settings_inputs["DPI_IN"].value))
+        file_separator_controller.set_setting("PODROCJE", float(self.settings_inputs["PODROCJE"].value))
+        file_separator_controller.set_setting("BELOST", int(self.settings_inputs["BELOST"].value))
+        file_separator_controller.set_setting("DEFAULT_SEPARATE", int(self.settings_inputs["DEFAULT_SEPARATE"].value))
+        file_separator_controller.set_setting("FILTER", self.settings_inputs["FILTER"].value)
+
+        # Update the default separate setting on the main page
+        self.menu.controls[-1].selected_index = file_separator_controller.settings["DEFAULT_SEPARATE"]
+        self.menu.update()
 
         # Save the settings to the file
-        self.controller.save_settings()
+        file_separator_controller.save_settings()
 
         # Close the settings alert dialog
         self.page.close(self.settings_alert_dialog)
@@ -478,10 +496,11 @@ class SeparatorView(Column):
         :return:
         """
         if self.active_document_placeholder:
+            is_in_error_state = self.active_document_placeholder.is_in_error_state(
+                self.active_document_placeholder.text_field.value
+            )
             self.active_document_placeholder.text_field.bgcolor = \
-                ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state(
-                    self.active_document_placeholder.text_field.value
-                ) else ft.colors.GREY_300
+                ft.colors.RED_200 if is_in_error_state else ft.colors.GREY_300
             self.active_document_placeholder.images_row_container.bgcolor = ft.colors.GREY_300
             self.active_document_placeholder.update()
 
@@ -574,7 +593,7 @@ class SeparatorView(Column):
         self.list_view.scroll_to(offset=-1, duration=1000)
 
         # Set the new document placeholder as active this operation must be done last!!
-        await new_document_placeholder.set_as_active_placeholder(None)
+        self.set_active_document_placeholder(new_document_placeholder)
         new_document_placeholder.update()
 
         # Hide the context menu
@@ -682,8 +701,91 @@ class SeparatorView(Column):
 
         self.page.update()
 
+    def on_clear_documents(self, e: ControlEvent | None) -> None:
+        """
+        Clear all grouped documents
+        :param e:
+        :return:
+        """
+        # Clear the grouped documents
+        file_separator_controller.clear_grouped_documents()
+
+        # Remove all document placeholders from the list view
+        self.list_view.controls.clear()
+        self.document_placeholders.clear()
+
+        # Update the list view
+        self.list_view.update()
+
+    def on_save_files(self, e: FilePickerResultEvent) -> None:
+        """
+        Save grouped documents to the selected directory
+        :param e:
+        :return:
+        """
+
+        if not e.path:
+            return
+
+        # Save the grouped documents to the selected directory
+        file_separator_controller.save_documents(e.path)
+
+        # Clear the grouped documents
+        file_separator_controller.clear_grouped_documents()
+
+        # Remove all document placeholders from the list view
+        self.list_view.controls.clear()
+        self.document_placeholders.clear()
+
+        # Update the list view
+        self.list_view.update()
+
     def on_import_files(self, e: FilePickerResultEvent) -> None:
-        print(e.files)
+        """
+        Import selected PDF files, group them and display grouped files in the list view
+        :param e:
+        :return:
+        """
+        # Get the paths of the selected files
+        document_paths: list[str] = [file.path for file in e.files]
+
+        # Bind the controller's report_progress method to update the progress bar
+        file_separator_controller.report_progress = self.update_progress_bar
+
+        # Show the progress bar
+        self.controls.insert(-1, self.progress_bar_container)
+        self.update()
+
+        # Group the documents
+        file_separator_controller.group_documents(document_paths)
+
+        # Display the grouped documents in the list view
+        for document_name, images in file_separator_controller.grouped_documents.items():
+            document_placeholder = DocumentPlaceholder(
+                page=self.page,
+                document_name=document_name,
+                image_paths=images,
+                set_as_active=self.set_active_document_placeholder,
+            )
+
+            self.document_placeholders.append(document_placeholder)
+            self.list_view.controls.append(document_placeholder)
+
+            self.list_view.update()
+
+        # Hide the progress bar
+        self.controls.remove(self.progress_bar_container)
+        self.update()
+
+    def update_progress_bar(self) -> None:
+        """
+        Function to that updates the progress bar based on the controller's progress
+        :return:
+        """
+        # Update the progress bar based on the current progress
+        self.progress_bar.value = file_separator_controller.progress
+        print(file_separator_controller.progress)
+        self.progress_bar.update()
 
     def hide_context_menu(self, e: ControlEvent | None) -> None:
         """
