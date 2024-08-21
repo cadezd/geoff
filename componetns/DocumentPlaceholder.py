@@ -206,8 +206,8 @@ class DocumentPlaceholder(UserControl):
         :return:
         """
         for image in self.image_elements:
-            image.width = min(700, image.width + 50)
-            image.height = min(800, image.height + 50)
+            image.width = min(1200, image.width + 50)
+            image.height = min(1300, image.height + 50)
             image.update()
 
     async def zoom_out(self) -> None:
