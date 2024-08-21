@@ -107,10 +107,8 @@ class FileSeparatorController:
                 decoded_codes = decode(inverted, symbols=[symbol])
                 decoded_codes = [code.data.decode("utf-8").replace(" ", "_") for code in decoded_codes]
 
-                print("Decoded codes:", decoded_codes)
                 # Filters invalid codes
                 filtered_codes = [code for code in decoded_codes if re.match(self.settings["FILTER"], code)]
-                print("Filtered codes:", filtered_codes)
 
                 # Group the PDFs
                 if filtered_codes:
@@ -157,7 +155,11 @@ class FileSeparatorController:
             raise ValueError(f"Končni indeks {idx_to} ni veljaven!")
 
         step: int = 1 if idx_from < idx_to else -1
+
+        print(f"idx_from: {idx_from}, idx_to: {idx_to}, step: {step}")
+
         for i in range(idx_from, idx_to, step):
+            print(i)
             self.grouped_documents[document_name][i], self.grouped_documents[document_name][i + step] = \
                 self.grouped_documents[document_name][i + step], self.grouped_documents[document_name][i]
 
@@ -170,7 +172,7 @@ class FileSeparatorController:
 
         self.grouped_documents[document_name].pop(idx)
 
-    def create_new_document(self, pages: list[str]) -> None:
+    def create_new_document(self, pages: list[str]) -> tuple[str, list[str]]:
         if not pages:
             raise ValueError("Izbrati morate vsaj eno stran, da lahko ustvarite nov dokument!")
 
@@ -181,6 +183,10 @@ class FileSeparatorController:
             i += 1
 
         self.grouped_documents[new_document_name] = pages
+
+        return new_document_name, pages
+
+
 
     def save_documents(self, output_directory: str) -> None:
         for document_name, images_base64_list in self.grouped_documents.items():
