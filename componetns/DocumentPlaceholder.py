@@ -17,6 +17,10 @@ class DocumentPlaceholder(UserControl):
         self.document_name = document_name
         self.image_paths = image_paths
         self.set_as_active = set_as_active
+        self.error = not document_name or \
+                     not document_name.strip() or \
+                     'NEPREPOZNANO' in document_name or \
+                     'NOV DOKUMENT' in document_name
 
         self.selected_dragable_image_elements = []
         self.selected_image_paths = []
@@ -28,7 +32,7 @@ class DocumentPlaceholder(UserControl):
             value=self.document_name,
             border=ft.InputBorder.OUTLINE,
             tooltip='KLIKNI za urejanje imena dokumenta',
-            bgcolor=ft.colors.RED_200 if self.is_in_error_state(self.document_name) else ft.colors.GREY_300,
+            bgcolor=ft.colors.RED_200 if self.is_in_error_state() else ft.colors.GREY_300,
             color=ft.colors.GREY_600,
             focused_color=ft.colors.GREY_900,
             filled=True,
@@ -100,6 +104,7 @@ class DocumentPlaceholder(UserControl):
         :param e:
         :return:
         """
+        self.error = False
         self.set_as_active(self)
         self.text_field.suffix_icon = 'edit'
         self.text_field.error_text = None
@@ -111,6 +116,7 @@ class DocumentPlaceholder(UserControl):
         :param e:
         :return:
         """
+        self.error = False
         self.set_as_active(self)
         self.text_field.suffix_icon = 'edit'
         self.text_field.error_text = None
@@ -127,13 +133,24 @@ class DocumentPlaceholder(UserControl):
                 file_separator_controller.rename_document(self.document_name, self.text_field.value)
                 self.document_name = self.text_field.value
                 self.text_field.suffix_icon = None
+                self.error = False
             except ValueError as e:
                 self.text_field.suffix_icon = 'error'
                 self.text_field.bgcolor = ft.colors.RED_200
                 self.text_field.error_text = str(e)
+                self.error = True
         else:
-            self.text_field.suffix_icon = None
+            try:
+                if "NOV DOKUMENT" in self.text_field.value or "NEPREPOZNANO" in self.text_field.value:
+                    raise ValueError(f"Ime dokumenta {self.text_field.value} ni veljavno!")
 
+                self.text_field.suffix_icon = None
+                self.error = False
+            except ValueError as e:
+                self.text_field.error_text = str(e)
+                self.error = True
+
+        self.set_as_active(self)
         print("ON BLUR", self.document_name)
         self.update()
 
@@ -161,6 +178,10 @@ class DocumentPlaceholder(UserControl):
             self.selected_dragable_image_elements.pop(index)
             self.selected_image_paths.pop(index)
 
+        # Set the document placeholder as active
+        self.set_as_active(self)
+
+        # Update the UI
         container.update()
 
     def on_accept(self, e: DragTarget) -> None:
@@ -191,14 +212,12 @@ class DocumentPlaceholder(UserControl):
 
         self.update()
 
-    def is_in_error_state(self, value) -> bool:
+    def is_in_error_state(self) -> bool:
         """
-        Check if the document name is in the error state
+        Returns True if the document name is in error state else False
         :return: bool
         """
-        return (
-                not value or not value.strip() or 'NEPREPOZNANO' in value or 'NOV DOKUMENT' in value
-        )
+        return self.error
 
     async def zoom_in(self) -> None:
         """

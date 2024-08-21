@@ -524,19 +524,14 @@ class SeparatorView(Column):
         :return:
         """
         if self.active_document_placeholder:
-            is_in_error_state = self.active_document_placeholder.is_in_error_state(
-                self.active_document_placeholder.text_field.value
-            )
             self.active_document_placeholder.text_field.bgcolor = \
-                ft.colors.RED_200 if is_in_error_state else ft.colors.GREY_300
+                ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state() else ft.colors.GREY_300
             self.active_document_placeholder.images_row_container.bgcolor = ft.colors.GREY_300
             self.active_document_placeholder.update()
 
         self.active_document_placeholder = document_placeholder
         self.active_document_placeholder.text_field.bgcolor = \
-            ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state(
-                self.active_document_placeholder.text_field.value
-            ) else ft.colors.BLUE_GREY_100
+            ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state() else ft.colors.BLUE_GREY_100
         self.active_document_placeholder.images_row_container.bgcolor = ft.colors.BLUE_GREY_100
         self.active_document_placeholder.update()
 
