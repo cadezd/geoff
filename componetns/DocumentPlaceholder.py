@@ -210,6 +210,8 @@ class DocumentPlaceholder(UserControl):
             image.height = min(1300, image.height + 50)
             image.update()
 
+        self.update()
+
     async def zoom_out(self) -> None:
         """
         Decrease the size of the images
@@ -220,6 +222,8 @@ class DocumentPlaceholder(UserControl):
             image.height = max(200, image.height - 50)
             image.update()
 
+        self.update()
+
     async def reset_zoom(self) -> None:
         """
         Reset the size of the images
@@ -229,6 +233,8 @@ class DocumentPlaceholder(UserControl):
             image.width = 300
             image.height = 400
             image.update()
+
+        self.update()
 
     async def delete_selected_images(self) -> None:
         """
@@ -258,7 +264,7 @@ class DocumentPlaceholder(UserControl):
         self.selected_dragable_image_elements = []
 
         # Update the UI
-        self.images_row.update()
+        self.update()
 
     def build(self) -> Column:
         """
