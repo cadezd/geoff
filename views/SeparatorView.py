@@ -327,6 +327,7 @@ class SeparatorView(Column):
             on_click=self.reset_zoom,
         )
 
+        self.progress_text: Text = Text("Grupiram dokumente: 0% končano")
         self.progress_bar: ProgressBar = ProgressBar(
             value=file_separator_controller.progress,
             height=10,
@@ -335,7 +336,7 @@ class SeparatorView(Column):
         self.progress_bar_container: Container = Container(
             content=Column(
                 controls=[
-                    ft.Text("Grupiram dokumente..."),
+                    self.progress_text,
                     self.progress_bar,
                 ],
             ),
@@ -523,7 +524,6 @@ class SeparatorView(Column):
         for document_placeholder in self.document_placeholders:
             # Delete selected images from the document placeholder
             await document_placeholder.delete_selected_images()
-            document_placeholder.update()
 
             # If there are no images in the document placeholder, save it as empty
             if len(document_placeholder.image_paths) == 0:
@@ -535,6 +535,7 @@ class SeparatorView(Column):
             if self.active_document_placeholder == empty_document_placeholder:
                 self.active_document_placeholder = None
 
+            file_separator_controller.delete_document(empty_document_placeholder.document_name)
             self.list_view.controls.remove(empty_document_placeholder)
             self.document_placeholders.remove(empty_document_placeholder)
 
@@ -566,6 +567,7 @@ class SeparatorView(Column):
             if self.active_document_placeholder == empty_document_placeholder:
                 self.active_document_placeholder = None
 
+            file_separator_controller.delete_document(empty_document_placeholder.document_name)
             self.list_view.controls.remove(empty_document_placeholder)
             self.document_placeholders.remove(empty_document_placeholder)
 
@@ -573,11 +575,12 @@ class SeparatorView(Column):
         if len(selected_image_paths) == 0:
             return
 
+        new_document_name, pages = file_separator_controller.create_new_document(selected_image_paths)
         # Create a new document placeholder
         new_document_placeholder = DocumentPlaceholder(
             page=self.page,
-            document_name=f"NOV DOKUMENT",
-            image_paths=selected_image_paths,
+            document_name=new_document_name,
+            image_paths=pages,
             set_as_active=self.set_active_document_placeholder,
         )
 
@@ -782,9 +785,11 @@ class SeparatorView(Column):
         Function to that updates the progress bar based on the controller's progress
         :return:
         """
+        # Update progress text
+        self.progress_text.value = f"Grupiram dokumente: {round(file_separator_controller.progress * 100, 2)}% končano"
+        self.progress_text.update()
         # Update the progress bar based on the current progress
         self.progress_bar.value = file_separator_controller.progress
-        print(file_separator_controller.progress)
         self.progress_bar.update()
 
     def hide_context_menu(self, e: ControlEvent | None) -> None:
