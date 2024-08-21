@@ -5,6 +5,8 @@ from collections.abc import Callable
 import flet as ft
 from flet import UserControl, Column, Row, TextField, Container, Draggable, DragTarget, Image, ControlEvent
 
+from controlers.FileSeparatorController import file_separator_controller
+
 
 class DocumentPlaceholder(UserControl):
     def __init__(self, page: ft.Page, document_name: str, image_paths: list[str], set_as_active: Callable) -> None:
@@ -44,7 +46,7 @@ class DocumentPlaceholder(UserControl):
         self.image_elements: list[Image] = []
         for path in self.image_paths:
             image = Image(
-                src=path,
+                src_base64=path,
                 width=300,
                 height=400,
                 tooltip='POVLECI IN SPUSTI za spreminjanje vrstnega reda\nLEVI KLIK za izbiro slike\nDESNI KLIK za izbiro možnosti',
@@ -92,34 +94,47 @@ class DocumentPlaceholder(UserControl):
             on_click=lambda e: self.set_as_active(self),
         )
 
-    async def on_text_field_change(self, e: ControlEvent) -> None:
+    def on_text_field_change(self, e: ControlEvent) -> None:
         """
-        Highlight the text field if the value is empty or contains 'NEPREPOZNANO' or 'NOV DOKUMENT'
-        It signals the user that the document name is not valid
+        Highlight the text field when it is focused, remove the error text and change the suffix icon
         :param e:
         :return:
         """
-        await self.set_as_active(self)
-        self.text_field.suffix_icon = 'error' if self.is_in_error_state(self.text_field.value) else 'edit'
+        self.set_as_active(self)
+        self.text_field.suffix_icon = 'edit'
+        self.text_field.error_text = None
         self.update()
 
-    async def on_text_field_focus(self, e: ControlEvent) -> None:
+    def on_text_field_focus(self, e: ControlEvent) -> None:
         """
-        Change the suffix icon to edit when the text field is focused
+        Highlight the text field when it is focused, remove the error text and change the suffix icon
         :param e:
         :return:
         """
-        await self.set_as_active(self)
+        self.set_as_active(self)
         self.text_field.suffix_icon = 'edit'
+        self.text_field.error_text = None
         self.update()
 
     def on_text_field_blur(self, e: ControlEvent) -> None:
         """
-        Change the suffix icon to None when the text field is blurred
+        Check if the document name has changed and rename the document if the name is valid
         :param e:
         :return:
         """
-        self.text_field.suffix_icon = None
+        if self.text_field.value != self.document_name:
+            try:
+                file_separator_controller.rename_document(self.document_name, self.text_field.value)
+                self.document_name = self.text_field.value
+                self.text_field.suffix_icon = None
+            except ValueError as e:
+                self.text_field.suffix_icon = 'error'
+                self.text_field.bgcolor = ft.colors.RED_200
+                self.text_field.error_text = str(e)
+        else:
+            self.text_field.suffix_icon = None
+
+        print("ON BLUR", self.document_name)
         self.update()
 
     def on_image_content_click(self, e: ControlEvent) -> None:
@@ -167,12 +182,12 @@ class DocumentPlaceholder(UserControl):
         # Shift the controls
         step = 1 if source_index < destination_index else -1
         for i in range(source_index, destination_index, step):
-            # Swap the images in the list
-            self.image_paths[i], self.image_paths[i + step] = self.image_paths[i + step], self.image_paths[i]
-
             # Swap the controls in the view
             self.images_row.controls[i], self.images_row.controls[i + step] = \
                 self.images_row.controls[i + step], self.images_row.controls[i]
+
+        # Shift the selected images in controller
+        file_separator_controller.rearrange_document_pages(self.document_name, source_index, destination_index)
 
         self.update()
 
@@ -229,8 +244,8 @@ class DocumentPlaceholder(UserControl):
             # Get the index of the selected image
             index = self.dragable_image_elements.index(selected_dragable_image_element)
 
-            # Remove the image from the image paths list
-            self.image_paths.pop(index)
+            # Remove the image from the controller
+            file_separator_controller.delete_document_page(self.document_name, index)
 
             # Remove the image from the image elements
             self.image_elements.pop(index)
