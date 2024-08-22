@@ -37,7 +37,7 @@ jobs:
         shell: pwsh
         run: |
           (Get-Content requirements.txt) -notmatch 'fitz' | Set-Content requirements.txt
-          Add-Content requirements.txt 'PyMuPDF==1.24.9
+          Add-Content requirements.txt 'PyMuPDF==1.24.9'
           Add-Content requirements.txt 'opencv-python==4.10.0.82'
 
       - name: Install depencencies
