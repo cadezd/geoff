@@ -805,6 +805,9 @@ class SeparatorView(Column):
         # Group the documents
         file_separator_controller.group_documents(document_paths)
 
+        # Clear the list view
+        self.list_view.controls.clear()
+
         # Display the grouped documents in the list view
         for document_name, images in file_separator_controller.grouped_documents.items():
             document_placeholder = DocumentPlaceholder(
