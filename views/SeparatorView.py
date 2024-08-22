@@ -8,7 +8,7 @@ from flet import MenuBar, SubmenuButton, Text, MenuItemButton, Column, Row, Cupe
     FilePickerFileType, FilePickerResultEvent, TextButton, Dropdown, TextField, ProgressBar
 
 from componetns.DocumentPlaceholder import DocumentPlaceholder
-from controlers.FileSeparatorController import file_separator_controller
+from controllers.FileSeparatorController import file_separator_controller
 
 
 class SeparatorView(Column):

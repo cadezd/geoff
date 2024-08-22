@@ -2,7 +2,7 @@ import os.path
 import pickle
 import unittest
 
-from controlers.FileSeparatorController import FileSeparatorController
+from controllers.FileSeparatorController import FileSeparatorController
 
 
 class FileSeparatorControllerTest(unittest.TestCase):

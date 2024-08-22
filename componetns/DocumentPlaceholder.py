@@ -6,7 +6,7 @@ import flet as ft
 from flet import UserControl, Column, Row, TextField, Container, Draggable, DragTarget, Image, ControlEvent, IconButton, \
     ButtonStyle
 
-from controlers.FileSeparatorController import file_separator_controller
+from controllers.FileSeparatorController import file_separator_controller
 
 MIN_IMAGE_WIDTH = 150
 MIN_IMAGE_HEIGHT = 200
