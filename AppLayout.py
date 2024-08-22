@@ -18,7 +18,7 @@ class AppLayout(Row):
         self.navigation = Navigation(self.page)
         self.home_view = HomeView(self.page)
         self.separator_view = SeparatorView(self.page)
-        self.payments_view = PaymentsView(self.page)
+        # self.payments_view = PaymentsView(self.page)
 
         # Default active view
         self._active_view = self.home_view
@@ -56,8 +56,8 @@ class AppLayout(Row):
         self.navigation.update()
         self.page.update()
 
-    def set_payments_view(self) -> None:
-        self.active_view = self.payments_view
-        self.navigation.navigation_rail.selected_index = 2
-        self.navigation.update()
-        self.page.update()
+    # def set_payments_view(self) -> None:
+    #    self.active_view = self.payments_view
+    #    self.navigation.navigation_rail.selected_index = 2
+    #    self.navigation.update()
+    #    self.page.update()

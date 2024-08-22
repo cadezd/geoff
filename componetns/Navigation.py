@@ -24,11 +24,11 @@ class Navigation(UserControl):
                     label="Separator",
                     padding=ft.padding.all(10),
                 ),
-                NavigationRailDestination(
-                    icon_content=Icon(ft.icons.EURO),
-                    label="Plačila",
-                    padding=ft.padding.all(10),
-                ),
+                # NavigationRailDestination(
+                #    icon_content=Icon(ft.icons.EURO),
+                #    label="Plačila",
+                #    padding=ft.padding.all(10),
+                # ),
             ],
             on_change=self.on_change,
         )
@@ -39,8 +39,8 @@ class Navigation(UserControl):
 
         if selected_index == 1:
             self.page.route = '/separator'
-        elif selected_index == 2:
-            self.page.route = '/payments'
+        # elif selected_index == 2:
+        #    self.page.route = '/payments'
         else:
             self.page.route = '/'
 

@@ -16,8 +16,8 @@ class App(UserControl):
     def on_route_change(self, e: RouteChangeEvent) -> None:
         if e.route == '/separator':
             self.layout.set_separator_view()
-        elif e.route == '/payments':
-            self.layout.set_payments_view()
+        # elif e.route == '/payments':
+        #    self.layout.set_payments_view()
         else:
             self.layout.set_home_view()
 
