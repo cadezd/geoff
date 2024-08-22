@@ -24,7 +24,7 @@ jobs:
           flutter-version: '3.24.0'
 
       - name: Install flet, pyinstaller and wheel
-        run:
+        run: |
           pip install flet
           pip install pyinstaller
           pip install wheel
@@ -38,6 +38,9 @@ jobs:
 
       - name: Make dist folder
         run: mkdir dist/geoff
+
+      - name: Copy assets folder
+        run: xcopy assets dist\geoff\assets /s /e /y
 
       - name: Build app
         run: flet pack main.py --name GEOFF --icon .\assets\icon.png --add-data "binaries\libiconv.dll;pyzbar" --add-data "binaries\libzbar-64.dll;pyzbar" --distpath dist\geoff
