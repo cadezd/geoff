@@ -29,6 +29,10 @@ jobs:
           pip install flet
           pip install pyinstaller
 
+      - name: Uninstall pathlib
+        run: |
+          pip uninstall -y pathlib
+
       - name: Make requirements.txt file
         run: pipreqs . --encoding utf-8 --ignore .\unittests\,.\separator_settings\,.\binaries\,.\assets\,.\.venv\ --force
 
