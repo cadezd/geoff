@@ -17,7 +17,7 @@ class HomeView(Column):
         # Geoff (the car) that will be animated
         self.geoff: Container = Container(
             content=Image(
-                src=os.path.join("..", "assets", "geoff.png"),
+                src=os.path.join("geoff.png"),
             ),
             offset=ft.transform.Offset(5, 0),
             animate_offset=ft.animation.Animation(1000),
