@@ -18,9 +18,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install pipreqs
+      - name: Install pipreqs and flet
         run: |
-          pip install pipreqs 
+          pip install pipreqs
+          pip install flet
 
       - name: Make dist folder
         run: mkdir dist/geoff
