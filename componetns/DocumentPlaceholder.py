@@ -3,9 +3,17 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import flet as ft
-from flet import UserControl, Column, Row, TextField, Container, Draggable, DragTarget, Image, ControlEvent
+from flet import UserControl, Column, Row, TextField, Container, Draggable, DragTarget, Image, ControlEvent, IconButton, \
+    ButtonStyle
 
 from controlers.FileSeparatorController import file_separator_controller
+
+MIN_IMAGE_WIDTH = 150
+MIN_IMAGE_HEIGHT = 200
+DEFAULT_IMAGE_WIDTH = 300
+DEFAULT_IMAGE_HEIGHT = 400
+MAX_IMAGE_WIDTH = 1400
+MAX_IMAGE_HEIGHT = 1500
 
 
 class DocumentPlaceholder(UserControl):
@@ -44,6 +52,19 @@ class DocumentPlaceholder(UserControl):
             on_blur=self.on_text_field_blur,
         )
 
+        # Icon button for zooming in
+        self.zoom_in_out_full_button = IconButton(
+            icon=ft.icons.ZOOM_IN_ROUNDED,
+            style=ButtonStyle(
+                bgcolor=ft.colors.GREY_300,
+                color=ft.colors.GREY_600,
+                shape=ft.RoundedRectangleBorder(radius=5),
+                padding=12,
+            ),
+            tooltip='Povečaj / pomanjšaj dokument',
+            on_click=self.zoom_in_out_full,
+        )
+
         # We keep a reference to the dragable image elements so we can reorder them
         self.dragable_image_elements: list[DragTarget] = []
         # We keep a reference to the image elements so we can change their size
@@ -51,8 +72,8 @@ class DocumentPlaceholder(UserControl):
         for path in self.image_paths:
             image = Image(
                 src_base64=path,
-                width=300,
-                height=400,
+                width=DEFAULT_IMAGE_WIDTH,
+                height=DEFAULT_IMAGE_HEIGHT,
                 tooltip='POVLECI IN SPUSTI za spreminjanje vrstnega reda\nLEVI KLIK za izbiro slike\nDESNI KLIK za izbiro možnosti',
 
             )
@@ -219,14 +240,29 @@ class DocumentPlaceholder(UserControl):
         """
         return self.error
 
+    async def zoom_in_out_full(self, e: ControlEvent) -> None:
+        """
+        Zoom in or out the images to full screen
+        :return:
+        """
+        self.set_as_active(self)
+        self.zoom_in_out_full_button.icon = ft.icons.ZOOM_IN_ROUNDED if \
+            self.zoom_in_out_full_button.icon != ft.icons.ZOOM_IN_ROUNDED else ft.icons.REPLAY_ROUNDED
+        for image in self.image_elements:
+            image.width = MAX_IMAGE_WIDTH if self.zoom_in_out_full_button.icon != ft.icons.ZOOM_IN_ROUNDED else DEFAULT_IMAGE_WIDTH
+            image.height = MAX_IMAGE_HEIGHT if self.zoom_in_out_full_button.icon != ft.icons.ZOOM_IN_ROUNDED else DEFAULT_IMAGE_HEIGHT
+            image.update()
+
+        self.update()
+
     async def zoom_in(self) -> None:
         """
         Increase the size of the images
         :return:
         """
         for image in self.image_elements:
-            image.width = min(1200, image.width + 50)
-            image.height = min(1300, image.height + 50)
+            image.width = min(MAX_IMAGE_WIDTH, image.width + 50)
+            image.height = min(MAX_IMAGE_HEIGHT, image.height + 50)
             image.update()
 
         self.update()
@@ -237,8 +273,8 @@ class DocumentPlaceholder(UserControl):
         :return:
         """
         for image in self.image_elements:
-            image.width = max(150, image.width - 50)
-            image.height = max(200, image.height - 50)
+            image.width = max(MIN_IMAGE_WIDTH, image.width - 50)
+            image.height = max(MIN_IMAGE_HEIGHT, image.height - 50)
             image.update()
 
         self.update()
@@ -249,8 +285,8 @@ class DocumentPlaceholder(UserControl):
         :return:
         """
         for image in self.image_elements:
-            image.width = 300
-            image.height = 400
+            image.width = DEFAULT_IMAGE_WIDTH
+            image.height = DEFAULT_IMAGE_HEIGHT
             image.update()
 
         self.update()
@@ -301,6 +337,20 @@ class DocumentPlaceholder(UserControl):
                                 ],
                             ),
                             expand=True,
+                            shadow=ft.BoxShadow(
+                                spread_radius=1,
+                                blur_radius=5,
+                                color=ft.colors.GREY_500,
+                                offset=ft.Offset(0, 2),
+                                blur_style=ft.ShadowBlurStyle.NORMAL,
+                            ),
+                        ),
+                        Container(
+                            content=Row(
+                                controls=[
+                                    self.zoom_in_out_full_button,
+                                ],
+                            ),
                             shadow=ft.BoxShadow(
                                 spread_radius=1,
                                 blur_radius=5,
