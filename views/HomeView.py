@@ -27,12 +27,14 @@ class HomeView(Column):
 
         # Controls of the HomeView
         self.controls = [
+            # Welcome message
             Row(
                 controls=[
                     Text("👋Dobrodošli nazaj!", size=36),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
+            # Brief description of the app
             Row(
                 controls=[
                     Text(spans=[
@@ -42,12 +44,14 @@ class HomeView(Column):
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
+            # Geoff (the car) image
             Row(
                 controls=[
                     self.geoff,
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
+            # Button to animate Geoff
             Row(
                 controls=[
                     ElevatedButton("Kje je Geoff?", on_click=self.animate, style=ft.ButtonStyle(
