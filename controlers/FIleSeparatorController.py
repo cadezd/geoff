@@ -5,7 +5,6 @@ import os
 import pickle
 import re
 from io import BytesIO
-from pprint import pprint
 
 import fitz
 from PIL import Image
@@ -86,8 +85,6 @@ class FileSeparatorController:
         # Default key
         key = "NEPREPOZNANO"
 
-        # await asyncio.sleep(1)
-
         # Iterate through all document paths
         for i, document_path in enumerate(document_paths):
             print("Processing document:", document_path)
@@ -102,7 +99,12 @@ class FileSeparatorController:
                     self.settings['PODROCJE'],
                     self.settings['ZOOM'],
                     self.settings['MASKA'],
+                    self.settings['BELOST']
                 )
+
+                # If the image is white, skip it
+                if inverted is None:
+                    continue
 
                 decoded_codes = decode(inverted, symbols=[symbol])
                 decoded_codes = [code.data.decode("utf-8").replace(" ", "_") for code in decoded_codes]
@@ -120,8 +122,6 @@ class FileSeparatorController:
             # Update the progress
             self.progress = (i + 1) / len(document_paths)
             self.report_progress()
-
-        pprint(self.grouped_documents.keys())
 
     def rename_document(self, old_name: str, new_name: str) -> None:
         if not new_name or len(new_name.strip()) == 0 or "NOV DOKUMENT" in new_name or "NEPREPOZNANO" in new_name:
@@ -185,8 +185,6 @@ class FileSeparatorController:
         self.grouped_documents[new_document_name] = pages
 
         return new_document_name, pages
-
-
 
     def save_documents(self, output_directory: str) -> None:
         for document_name, images_base64_list in self.grouped_documents.items():
