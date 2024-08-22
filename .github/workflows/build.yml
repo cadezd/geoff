@@ -38,7 +38,7 @@ jobs:
         run: pipreqs . --encoding utf-8 --ignore .\unittests\,.\separator_settings\,.\binaries\,.\assets\,.\.venv\ --force
 
       - name: Build app
-        run: flet build windows --module-name ${{ github.workspace }}/main.py  --output dist/geoff --verbose
+        run: flet build windows --output dist\geoff --verbose
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
