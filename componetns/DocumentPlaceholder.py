@@ -129,7 +129,7 @@ class DocumentPlaceholder(UserControl):
         self.set_as_active(self)
         self.text_field.suffix_icon = 'edit'
         self.text_field.error_text = None
-        self.update()
+        self.page.update()
 
     def on_text_field_focus(self, e: ControlEvent) -> None:
         """
@@ -141,7 +141,7 @@ class DocumentPlaceholder(UserControl):
         self.set_as_active(self)
         self.text_field.suffix_icon = 'edit'
         self.text_field.error_text = None
-        self.update()
+        self.page.update()
 
     def on_text_field_blur(self, e: ControlEvent) -> None:
         """
@@ -173,7 +173,7 @@ class DocumentPlaceholder(UserControl):
 
         self.set_as_active(self)
         print("ON BLUR", self.document_name)
-        self.update()
+        self.page.update()
 
     def on_image_content_click(self, e: ControlEvent) -> None:
         """
@@ -203,7 +203,7 @@ class DocumentPlaceholder(UserControl):
         self.set_as_active(self)
 
         # Update the UI
-        container.update()
+        self.page.update()
 
     def on_accept(self, e: DragTarget) -> None:
         """
@@ -231,7 +231,7 @@ class DocumentPlaceholder(UserControl):
         # Shift the selected images in controller
         file_separator_controller.rearrange_document_pages(self.document_name, source_index, destination_index)
 
-        self.update()
+        self.page.update()
 
     def is_in_error_state(self) -> bool:
         """
@@ -251,9 +251,8 @@ class DocumentPlaceholder(UserControl):
         for image in self.image_elements:
             image.width = MAX_IMAGE_WIDTH if self.zoom_in_out_full_button.icon != ft.icons.ZOOM_IN_ROUNDED else DEFAULT_IMAGE_WIDTH
             image.height = MAX_IMAGE_HEIGHT if self.zoom_in_out_full_button.icon != ft.icons.ZOOM_IN_ROUNDED else DEFAULT_IMAGE_HEIGHT
-            image.update()
 
-        self.update()
+        self.page.update()
 
     async def zoom_in(self) -> None:
         """
@@ -263,9 +262,8 @@ class DocumentPlaceholder(UserControl):
         for image in self.image_elements:
             image.width = min(MAX_IMAGE_WIDTH, image.width + 50)
             image.height = min(MAX_IMAGE_HEIGHT, image.height + 50)
-            image.update()
 
-        self.update()
+        self.page.update()
 
     async def zoom_out(self) -> None:
         """
@@ -275,9 +273,8 @@ class DocumentPlaceholder(UserControl):
         for image in self.image_elements:
             image.width = max(MIN_IMAGE_WIDTH, image.width - 50)
             image.height = max(MIN_IMAGE_HEIGHT, image.height - 50)
-            image.update()
 
-        self.update()
+        self.page.update()
 
     async def reset_zoom(self) -> None:
         """
@@ -287,9 +284,8 @@ class DocumentPlaceholder(UserControl):
         for image in self.image_elements:
             image.width = DEFAULT_IMAGE_WIDTH
             image.height = DEFAULT_IMAGE_HEIGHT
-            image.update()
 
-        self.update()
+        self.page.update()
 
     async def delete_selected_images(self) -> None:
         """
@@ -319,7 +315,7 @@ class DocumentPlaceholder(UserControl):
         self.selected_dragable_image_elements = []
 
         # Update the UI
-        self.update()
+        self.page.update()
 
     def build(self) -> Column:
         """

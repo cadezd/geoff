@@ -19,7 +19,12 @@ class SeparatorView(Column):
         self.active_document_placeholder: DocumentPlaceholder | None = None
         self.document_placeholders = []
 
+        #
         # Components
+        #
+
+        # FILE PICKERS #
+
         # File picker for importing pdf files
         self.file_picker_import: FilePicker = FilePicker(
             on_result=lambda e: self.page.run_thread(self.on_import_files, e),
@@ -30,6 +35,8 @@ class SeparatorView(Column):
         )
         self.page.overlay.append(self.file_picker_import)
         self.page.overlay.append(self.file_picker_save)
+
+        # ALTER DIALOGS #
 
         # Alert dialog for confirming the the deletion of documents
         self.delete_documents_alert_dialog: ft.AlertDialog = ft.AlertDialog(
@@ -153,6 +160,8 @@ class SeparatorView(Column):
                 ),
             ],
         )
+
+        # MENU AND SUBMENUS #
 
         # Top menu bar and all its submenus
         self.menu: MenuBar = MenuBar(
@@ -300,11 +309,17 @@ class SeparatorView(Column):
                 )
             ],
         )
+
+        # LIST VIEW #
+
+        # List view for displaying document placeholders
         self.list_view: ListView = ListView(
             expand=True,
             spacing=60,
             padding=10,
         )
+
+        # FLOATING ACTION BUTTONS #
 
         # Action buttons for the bottom row (Left side)
         self.floating_action_button_import: FloatingActionButton = FloatingActionButton(
@@ -349,6 +364,8 @@ class SeparatorView(Column):
             on_click=self.reset_zoom,
         )
 
+        # PROGRESS BAR #
+
         self.progress_text: Text = Text("Grupiram dokumente: 0% končano")
         self.progress_bar: ProgressBar = ProgressBar(
             value=file_separator_controller.progress,
@@ -365,6 +382,8 @@ class SeparatorView(Column):
             ),
             alignment=ft.alignment.bottom_center,
         )
+
+        # CONTEXT MENU #
 
         self.context_menu: Container = Container(
             content=Container(
@@ -398,6 +417,8 @@ class SeparatorView(Column):
             ),
         )
 
+        # GESTURE DETECTOR #
+
         # Gesture detector that open the context menu on right click
         # and has list view as content
         self.gesture_detector: GestureDetector = GestureDetector(
@@ -415,7 +436,9 @@ class SeparatorView(Column):
         # We hide the context menu, but if we do that in constructor it does not work properly
         self.context_menu.visible = False
 
+        #
         # Layout
+        #
         self.expand = True
         self.controls = [
             Row(controls=[self.menu]),
@@ -487,7 +510,7 @@ class SeparatorView(Column):
 
         # Update the default separate setting on the main page
         self.menu.controls[-1].selected_index = file_separator_controller.settings["DEFAULT_SEPARATE"]
-        self.menu.update()
+        self.page.update()
 
         # Save the settings to the file
         file_separator_controller.save_settings()
@@ -511,7 +534,7 @@ class SeparatorView(Column):
             self.settings_inputs["FILTER"].error_text = 'Napaka v regularnem izrazu'
             self.settings_inputs["FILTER"].bgcolor = ft.colors.RED_200
 
-        self.settings_inputs["FILTER"].update()
+        self.page.update()
 
     def set_active_document_placeholder(self, document_placeholder: DocumentPlaceholder) -> None:
         """
@@ -524,14 +547,14 @@ class SeparatorView(Column):
                 ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state() else ft.colors.GREY_300
             self.active_document_placeholder.images_row_container.bgcolor = ft.colors.GREY_300
             self.active_document_placeholder.zoom_in_out_full_button.style.bgcolor = ft.colors.GREY_300
-            self.active_document_placeholder.update()
+            self.page.update()
 
         self.active_document_placeholder = document_placeholder
         self.active_document_placeholder.text_field.bgcolor = \
             ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state() else ft.colors.BLUE_GREY_100
         self.active_document_placeholder.images_row_container.bgcolor = ft.colors.BLUE_GREY_100
         self.active_document_placeholder.zoom_in_out_full_button.style.bgcolor = ft.colors.BLUE_GREY_100
-        self.active_document_placeholder.update()
+        self.page.update()
 
     async def delete_selected_images(self, e: ControlEvent | None) -> None:
         """
@@ -559,7 +582,7 @@ class SeparatorView(Column):
             self.list_view.controls.remove(empty_document_placeholder)
             self.document_placeholders.remove(empty_document_placeholder)
 
-        self.list_view.update()
+        self.page.update()
         self.hide_context_menu(None)
 
     async def create_new_document(self, e: ControlEvent | None) -> None:
@@ -608,10 +631,6 @@ class SeparatorView(Column):
         self.document_placeholders.append(new_document_placeholder)
         self.list_view.controls.append(new_document_placeholder)
 
-        # Update the list view
-        self.list_view.update()
-        self.page.update()
-
         # Scroll to the end of the list view
         self.list_view.scroll_to(offset=-1, duration=1000)
 
@@ -621,6 +640,9 @@ class SeparatorView(Column):
 
         # Hide the context menu
         self.hide_context_menu(None)
+
+        # Update the list view
+        self.page.update()
 
     async def zoom_in_all(self, e: ControlEvent | None) -> None:
         """
@@ -724,7 +746,7 @@ class SeparatorView(Column):
         self.active_document_placeholder = None
 
         # Update the list view
-        self.list_view.update()
+        self.page.update()
 
         self.page.close(self.delete_documents_alert_dialog)
 
@@ -750,7 +772,7 @@ class SeparatorView(Column):
             self.document_placeholders.clear()
 
             # Update the list view
-            self.list_view.update()
+            self.page.update()
 
             # Show the alert dialog that the documents have been saved
             self.save_documents_alert_dialog.title = ft.Text("Dokumenti so bili shranjeni")
@@ -778,7 +800,7 @@ class SeparatorView(Column):
 
         # Show the progress bar
         self.controls.insert(-1, self.progress_bar_container)
-        self.update()
+        self.page.update()
 
         # Group the documents
         file_separator_controller.group_documents(document_paths)
@@ -795,11 +817,9 @@ class SeparatorView(Column):
             self.document_placeholders.append(document_placeholder)
             self.list_view.controls.append(document_placeholder)
 
-            self.list_view.update()
-
         # Hide the progress bar
         self.controls.remove(self.progress_bar_container)
-        self.update()
+        self.page.update()
 
     def update_progress_bar(self) -> None:
         """
@@ -811,7 +831,10 @@ class SeparatorView(Column):
         # Update the progress bar based on the current progress
         self.progress_bar.value = file_separator_controller.progress
 
-        self.page.update()
+        try:
+            self.page.update()
+        except Exception as e:
+            print(e)
 
     def hide_context_menu(self, e: ControlEvent | None) -> None:
         """
@@ -820,7 +843,7 @@ class SeparatorView(Column):
         :return:
         """
         self.context_menu.visible = False
-        self.context_menu.update()
+        self.page.update()
 
     def open_context_menu(self, e: TapEvent) -> None:
         """
@@ -831,7 +854,7 @@ class SeparatorView(Column):
         self.context_menu.visible = True
         self.context_menu.top = e.local_y - 10
         self.context_menu.left = e.local_x - 10
-        self.context_menu.update()
+        self.page.update()
 
     def did_mount(self):
         """
