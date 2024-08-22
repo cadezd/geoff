@@ -23,11 +23,12 @@ jobs:
         with:
           flutter-version: '3.24.0'
 
-      - name: Install pipreqs and flet and pyinstaller
+      - name: Install pipreqs, flet, pyinstaller and wheel
         run: |
           pip install pipreqs
           pip install flet
           pip install pyinstaller
+          pip install wheel
 
       - name: Make requirements.txt file
         run: pipreqs . --encoding utf-8 --ignore .\unittests\,.\separator_settings\,.\binaries\,.\assets\,.\.venv\ --force
@@ -36,7 +37,7 @@ jobs:
         shell: pwsh
         run: |
           (Get-Content requirements.txt) -notmatch 'fitz' | Set-Content requirements.txt
-          Add-Content requirements.txt 'PyMuPDF==1.20'
+          Add-Content requirements.txt 'PyMuPDF==1.20.0'
 
       - name: Install depencencies
         run: pip install -r requirements.txt 
