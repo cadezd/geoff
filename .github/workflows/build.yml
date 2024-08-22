@@ -1,0 +1,60 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+
+      - name: Install pipreqs, flet, pyinstaller and wheel
+        run: |
+          pip install pipreqs
+          pip install flet
+          pip install pyinstaller
+          pip install wheel
+
+      - name: Make requirements.txt file
+        run: pipreqs . --encoding utf-8 --ignore .\unittests\,.\separator_settings\,.\binaries\,.\assets\,.\.venv\ --force
+
+      - name: Modify requirements.txt
+        shell: pwsh
+        run: |
+          (Get-Content requirements.txt) -notmatch 'fitz' | Set-Content requirements.txt
+          Add-Content requirements.txt 'PyMuPDF==1.24.9'
+          Add-Content requirements.txt 'opencv-python==4.10.0.82'
+
+      - name: Install depencencies
+        run: pip install -r requirements.txt 
+
+      - name: Uninstall pathlib
+        run: |
+          pip uninstall -y pathlib
+
+      - name: Make dist folder
+        run: mkdir dist/geoff
+
+      - name: Build app
+        run: flet pack main.py --name GEOFF --icon .\assets\icon.png --add-data "binaries\libiconv.dll;pyzbar" --add-data "binaries\libzbar-64.dll;pyzbar" --distpath dist\geoff
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: geoff
+          path: dist
