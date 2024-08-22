@@ -19,10 +19,6 @@ class SeparatorView(Column):
         self.active_document_placeholder: DocumentPlaceholder | None = None
         self.document_placeholders = []
 
-        # Events
-        self.page.on_keyboard_event = None
-        self.page.on_keyboard_event = self.on_keyboard
-
         # Components
         # File picker for importing pdf files
         self.file_picker_import: FilePicker = FilePicker(
@@ -38,7 +34,7 @@ class SeparatorView(Column):
         # Alert dialog for confirming the the deletion of documents
         self.delete_documents_alert_dialog: ft.AlertDialog = ft.AlertDialog(
             modal=True,
-            title=ft.Text("Potrditev izbrisa dokumentov", weight=ft.FontWeight.BOLD),
+            title=ft.Text("Potrditev izbrisa dokumentov"),
             content=ft.Text("Ali ste prepričani, da želite izbrisati vse dokumente?", size=16),
             actions=[
                 TextButton(
@@ -527,12 +523,14 @@ class SeparatorView(Column):
             self.active_document_placeholder.text_field.bgcolor = \
                 ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state() else ft.colors.GREY_300
             self.active_document_placeholder.images_row_container.bgcolor = ft.colors.GREY_300
+            self.active_document_placeholder.zoom_in_out_full_button.style.bgcolor = ft.colors.GREY_300
             self.active_document_placeholder.update()
 
         self.active_document_placeholder = document_placeholder
         self.active_document_placeholder.text_field.bgcolor = \
             ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state() else ft.colors.BLUE_GREY_100
         self.active_document_placeholder.images_row_container.bgcolor = ft.colors.BLUE_GREY_100
+        self.active_document_placeholder.zoom_in_out_full_button.style.bgcolor = ft.colors.BLUE_GREY_100
         self.active_document_placeholder.update()
 
     async def delete_selected_images(self, e: ControlEvent | None) -> None:
@@ -722,6 +720,9 @@ class SeparatorView(Column):
         self.list_view.controls.clear()
         self.document_placeholders.clear()
 
+        # Set the active document placeholder to None
+        self.active_document_placeholder = None
+
         # Update the list view
         self.list_view.update()
 
@@ -807,10 +808,10 @@ class SeparatorView(Column):
         """
         # Update progress text
         self.progress_text.value = f"Grupiram dokumente: {round(file_separator_controller.progress * 100, 2)}% končano"
-        self.progress_text.update()
         # Update the progress bar based on the current progress
         self.progress_bar.value = file_separator_controller.progress
-        self.progress_bar.update()
+
+        self.page.update()
 
     def hide_context_menu(self, e: ControlEvent | None) -> None:
         """
@@ -831,3 +832,17 @@ class SeparatorView(Column):
         self.context_menu.top = e.local_y - 10
         self.context_menu.left = e.local_x - 10
         self.context_menu.update()
+
+    def did_mount(self):
+        """
+        Allows the user to user shortcuts for file separator functions while separator view is active
+        :return:
+        """
+        self.page.on_keyboard_event.subscribe(self.on_keyboard)
+
+    def will_unmount(self):
+        """
+        When the user switches to another view, it removes shortcuts for file separator functions
+        :return:
+        """
+        self.page.on_keyboard_event.unsubscribe(self.on_keyboard)
