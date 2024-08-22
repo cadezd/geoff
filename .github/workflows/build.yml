@@ -33,7 +33,7 @@ jobs:
         run: pipreqs . --encoding utf-8 --ignore .\unittests\,.\separator_settings\,.\binaries\,.\assets\,.\.venv\ --force
 
       - name: Install depencencies
-        run: pip install -r ${{ github.workspace }}/requirements.txt 
+        run: pip install requirements.txt 
 
       - name: Make dist folder
         run: mkdir dist/geoff
