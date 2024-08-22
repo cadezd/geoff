@@ -26,19 +26,23 @@ jobs:
       - name: Upgrade Flutter
         run: flutter upgrade
 
-      - name: Install pipreqs and flet
+      - name: Install pipreqs and flet and pyinstaller
         run: |
           pip install pipreqs
           pip install flet
-
-      - name: Make dist folder
-        run: mkdir dist/geoff
+          pip install pyinstaller
 
       - name: Make requirements.txt file
         run: pipreqs . --encoding utf-8 --ignore .\unittests\,.\separator_settings\,.\binaries\,.\assets\,.\.venv\ --force
 
+      - name: Install depencencies
+        run: pip install -r ${{ github.workspace }}/requirements.txt 
+
+      - name: Make dist folder
+        run: mkdir dist/geoff
+
       - name: Build app
-        run: flet build windows --output dist\geoff --verbose
+        run: flet pack main.py --name GEOFF --icon .\assets\icon.png --add-data "binaries\libiconv.dll;pyzbar" --add-data "binaries\libzbar-64.dll;pyzbar" --distpath dist\geoff
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
