@@ -39,11 +39,11 @@ jobs:
       - name: Make dist folder
         run: mkdir dist/geoff
 
-      - name: Copy assets folder
-        run: xcopy assets dist\geoff\assets\ /s /e /y
-
       - name: Build app
         run: flet pack main.py --name GEOFF --icon .\assets\icon.png --add-data "binaries\libiconv.dll;pyzbar" --add-data "binaries\libzbar-64.dll;pyzbar" --distpath dist\geoff
+
+      - name: Copy assets folder
+        run: xcopy assets dist\geoff\assets\ /s /e /y
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
