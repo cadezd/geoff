@@ -4,7 +4,7 @@ from App import App
 
 
 async def main(page: ft.Page) -> None:
-    page.title = 'Simpos app'
+    page.title = 'GEOFF'
     page.window.width = 1000
     page.window.height = 700
     page.window.min_width = 1000
