@@ -29,15 +29,15 @@ jobs:
           pip install flet
           pip install pyinstaller
 
-      - name: Uninstall pathlib
-        run: |
-          pip uninstall -y pathlib
-
       - name: Make requirements.txt file
         run: pipreqs . --encoding utf-8 --ignore .\unittests\,.\separator_settings\,.\binaries\,.\assets\,.\.venv\ --force
 
       - name: Install depencencies
         run: pip install -r requirements.txt 
+
+      - name: Uninstall pathlib
+        run: |
+          pip uninstall -y pathlib
 
       - name: Make dist folder
         run: mkdir dist/geoff
