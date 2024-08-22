@@ -37,7 +37,7 @@ jobs:
         shell: pwsh
         run: |
           (Get-Content requirements.txt) -notmatch 'fitz' | Set-Content requirements.txt
-          Add-Content requirements.txt 'PyMuPDF==1.20.0'
+          Add-Content requirements.txt 'PyMuPDF==1.24.9'
 
       - name: Install depencencies
         run: pip install -r requirements.txt 
