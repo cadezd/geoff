@@ -23,24 +23,13 @@ jobs:
         with:
           flutter-version: '3.24.0'
 
-      - name: Install pipreqs, flet, pyinstaller and wheel
-        run: |
-          pip install pipreqs
+      - name: Install flet, pyinstaller and wheel
+        run:
           pip install flet
           pip install pyinstaller
           pip install wheel
 
-      - name: Make requirements.txt file
-        run: pipreqs . --encoding utf-8 --ignore .\unittests\,.\separator_settings\,.\binaries\,.\assets\,.\.venv\ --force
-
-      - name: Modify requirements.txt
-        shell: pwsh
-        run: |
-          (Get-Content requirements.txt) -notmatch 'fitz' | Set-Content requirements.txt
-          Add-Content requirements.txt 'PyMuPDF==1.24.9'
-          Add-Content requirements.txt 'opencv-python==4.10.0.82'
-
-      - name: Install depencencies
+      - name: Install dependencies from requirements.txt
         run: pip install -r requirements.txt 
 
       - name: Uninstall pathlib
