@@ -32,6 +32,11 @@ jobs:
       - name: Make requirements.txt file
         run: pipreqs . --encoding utf-8 --ignore .\unittests\,.\separator_settings\,.\binaries\,.\assets\,.\.venv\ --force
 
+      - name: Modify requirements.txt
+        run: |
+          sed -i.bak "/fitz/d" requirements.txt
+          echo "PyMuPDF==1.20" >> requirements.txt
+
       - name: Install depencencies
         run: pip install -r requirements.txt 
 
