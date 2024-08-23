@@ -138,6 +138,9 @@ class FileSeparatorController:
             self.progress = (i + 1) / len(document_paths)
             self.report_progress()
 
+        # Order the documents by key but "NEPREPOZNANO" always comes first
+        self.grouped_documents = dict(sorted(self.grouped_documents.items(), key=lambda x: x[0] if x[0] != "NEPREPOZNANO" else "0"))
+
     def rename_document(self, old_name: str, new_name: str) -> None:
         if not new_name or len(new_name.strip()) == 0 or "NOV DOKUMENT" in new_name or "NEPREPOZNANO" in new_name:
             raise ValueError(f"Ime dokumenta {new_name} ni veljavno!")
