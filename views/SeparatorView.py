@@ -537,7 +537,7 @@ class SeparatorView(Column):
 
         self.page.update()
 
-    def set_active_document_placeholder(self, document_placeholder: DocumentPlaceholder) -> None:
+    async def set_active_document_placeholder(self, document_placeholder: DocumentPlaceholder) -> None:
         """
         Set the active document placeholder
         :param document_placeholder:
@@ -636,7 +636,7 @@ class SeparatorView(Column):
         self.list_view.scroll_to(offset=-1, duration=1000)
 
         # Set the new document placeholder as active this operation must be done last!!
-        self.set_active_document_placeholder(new_document_placeholder)
+        await self.set_active_document_placeholder(new_document_placeholder)
         new_document_placeholder.update()
 
         # Hide the context menu

@@ -116,34 +116,34 @@ class DocumentPlaceholder(UserControl):
                 offset=ft.Offset(0, 2),
                 blur_style=ft.ShadowBlurStyle.NORMAL,
             ),
-            on_click=lambda e: self.set_as_active(self),
+            on_click=self.on_image_row_click,
         )
 
-    def on_text_field_change(self, e: ControlEvent) -> None:
+    async def on_text_field_change(self, e: ControlEvent) -> None:
         """
         Highlight the text field when it is focused, remove the error text and change the suffix icon
         :param e:
         :return:
         """
         self.error = False
-        self.set_as_active(self)
+        await self.set_as_active(self)
         self.text_field.suffix_icon = 'edit'
         self.text_field.error_text = None
         self.update()
 
-    def on_text_field_focus(self, e: ControlEvent) -> None:
+    async def on_text_field_focus(self, e: ControlEvent) -> None:
         """
         Highlight the text field when it is focused, remove the error text and change the suffix icon
         :param e:
         :return:
         """
         self.error = False
-        self.set_as_active(self)
+        await self.set_as_active(self)
         self.text_field.suffix_icon = 'edit'
         self.text_field.error_text = None
         self.update()
 
-    def on_text_field_blur(self, e: ControlEvent) -> None:
+    async def on_text_field_blur(self, e: ControlEvent) -> None:
         """
         Check if the document name has changed and rename the document if the name is valid
         :param e:
@@ -171,11 +171,20 @@ class DocumentPlaceholder(UserControl):
                 self.text_field.error_text = str(e)
                 self.error = True
 
-        self.set_as_active(self)
+        await self.set_as_active(self)
         print("ON BLUR", self.document_name)
         self.update()
 
-    def on_image_content_click(self, e: ControlEvent) -> None:
+    async def on_image_row_click(self, e: ControlEvent) -> None:
+        """
+        Set the document placeholder as active
+        :param e:
+        :return:
+        """
+        await self.set_as_active(self)
+        self.update()
+
+    async def on_image_content_click(self, e: ControlEvent) -> None:
         """
         Selects the image and moves it to the selected images list so that we can manipulate it
         :param e:
@@ -200,7 +209,7 @@ class DocumentPlaceholder(UserControl):
             self.selected_image_paths.pop(index)
 
         # Set the document placeholder as active
-        self.set_as_active(self)
+        await self.set_as_active(self)
 
         # Update the UI
         self.update()
@@ -245,7 +254,7 @@ class DocumentPlaceholder(UserControl):
         Zoom in or out the images to full screen
         :return:
         """
-        self.set_as_active(self)
+        await self.set_as_active(self)
         self.zoom_in_out_full_button.icon = ft.icons.ZOOM_IN_ROUNDED if \
             self.zoom_in_out_full_button.icon != ft.icons.ZOOM_IN_ROUNDED else ft.icons.REPLAY_ROUNDED
         for image in self.image_elements:
