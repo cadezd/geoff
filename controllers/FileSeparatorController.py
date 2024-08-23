@@ -31,7 +31,7 @@ class FileSeparatorController:
             "MASKA": [150, 175, 200, 225, 250],
             "PODROCJE": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
             "BELOST": [240, 245, 250, 255],
-            "DEFAULT_SEPARATE": [0, 1],
+            "DEFAULT_SEPARATE": [0, 1, 2],
         }
 
         # Progress of the separation
@@ -82,16 +82,19 @@ class FileSeparatorController:
 
         # Decodes the QR / BAR code
         symbol = ZBarSymbol.QRCODE if self.settings["DEFAULT_SEPARATE"] == 0 else ZBarSymbol.CODE39
-        # Default key
-        key = "NEPREPOZNANO"
 
         # Iterate through all document paths
         for i, document_path in enumerate(document_paths):
+
+            # Default key for each document
+            key = "NEPREPOZNANO"
+
             print("Processing document:", document_path)
 
             # Open the document and iterate through all pages
             document = fitz.open(document_path)
             for page in document:
+
                 # Preprocess the image for better QR / BAR code recognition
                 inverted = preprocess_page(
                     page,
@@ -106,18 +109,30 @@ class FileSeparatorController:
                 if inverted is None:
                     continue
 
-                decoded_codes = decode(inverted, symbols=[symbol])
-                decoded_codes = [code.data.decode("utf-8").replace(" ", "_") for code in decoded_codes]
+                # Separation by QR or BAR code
+                if self.settings["DEFAULT_SEPARATE"] == 0 or self.settings["DEFAULT_SEPARATE"] == 1:
 
-                # Filters invalid codes
-                filtered_codes = [code for code in decoded_codes if re.match(self.settings["FILTER"], code)]
+                    decoded_codes = decode(inverted, symbols=[symbol])
+                    decoded_codes = [code.data.decode("utf-8").replace(" ", "_") for code in decoded_codes]
 
-                # Group the PDFs
-                if filtered_codes:
-                    key = filtered_codes[0]
-                if key not in self.grouped_documents:
-                    self.grouped_documents[key] = []
-                self.grouped_documents[key].append(pdf_page_to_base64(page=page, dpi=120))
+                    # Filters invalid codes
+                    filtered_codes = [code for code in decoded_codes if re.match(self.settings["FILTER"], code)]
+
+                    # Group the PDFs
+                    if filtered_codes:
+                        key = filtered_codes[0]
+                    if key not in self.grouped_documents:
+                        self.grouped_documents[key] = []
+                    self.grouped_documents[key].append(pdf_page_to_base64(page=page, dpi=120))
+
+                # Separation by hand
+                elif self.settings["DEFAULT_SEPARATE"] == 2:
+                    key = os.path.basename(document_path).split(".")[0]
+
+                    if key not in self.grouped_documents:
+                        self.grouped_documents[key] = []
+
+                    self.grouped_documents[key].append(pdf_page_to_base64(page=page, dpi=120))
 
             # Update the progress
             self.progress = (i + 1) / len(document_paths)

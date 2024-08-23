@@ -63,8 +63,8 @@ class FileSeparatorControllerTest(unittest.TestCase):
             self.assertEqual(self.controller.settings["BELOST"], i)
 
         # DEFAULT_SEPARATE
-        # valid values are: 0, 1
-        for i in [0, 1]:
+        # valid values are: 0, 1, 2
+        for i in [0, 1, 2]:
             self.controller.set_setting("DEFAULT_SEPARATE", i)
             self.assertEqual(self.controller.settings["DEFAULT_SEPARATE"], i)
 
@@ -129,7 +129,7 @@ class FileSeparatorControllerTest(unittest.TestCase):
 
         # DEFAULT_SEPARATE
         # valid values are: 0, 1, everything else is invalid
-        for i in [-1, 2, 3]:
+        for i in [-1, 3, 4]:
             self.controller.set_setting("DEFAULT_SEPARATE", i)
             self.assertNotEqual(self.controller.settings["DEFAULT_SEPARATE"], i)
 
@@ -287,6 +287,55 @@ class FileSeparatorControllerTest(unittest.TestCase):
 
         self.assertIn("DPR23-01728", self.controller.grouped_documents.keys())
         self.assertEqual(len(self.controller.grouped_documents["DPR23-01728"]), 6)
+
+    def test_group_documents_by_hand(self):
+        files = [
+            os.path.join("test_files", "barcode1.pdf"),
+            os.path.join("test_files", "barcode2.pdf"),
+            os.path.join("test_files", "barcode3.pdf"),
+            os.path.join("test_files", "blank.pdf"),
+            os.path.join("test_files", "qrcode1.pdf"),
+            os.path.join("test_files", "qrcode2.pdf"),
+            os.path.join("test_files", "qrcode3.pdf"),
+            os.path.join("test_files", "qrcode4.pdf"),
+        ]
+
+        # set the optimal settings for qrcode detection
+        self.controller.set_setting("MASKA", 200)
+        self.controller.set_setting("ZOOM", 1)
+        self.controller.set_setting("DPI_IN", 300)
+        self.controller.set_setting("PODROCJE", 0.3)
+        self.controller.set_setting("BELOST", 255)
+        self.controller.set_setting("DEFAULT_SEPARATE", 2)
+        self.controller.set_setting("FILTER",
+                                    r"(DPR|CE|DDB|DOV|PRO|PADNI|DNI|NRA|M_PDO|PDO|NPR|PRA)([0-9]{2})(\+|-|_)([0-9]{4,6})")
+
+        # group the documents
+        self.controller.group_documents(files)
+
+        # check if the documents are grouped correctly (by checking the document names and length of each document)
+        self.assertIn("barcode1", self.controller.grouped_documents.keys())
+        self.assertEqual(len(self.controller.grouped_documents["barcode1"]), 1)
+
+        self.assertIn("barcode2", self.controller.grouped_documents.keys())
+        self.assertEqual(len(self.controller.grouped_documents["barcode2"]), 2)
+
+        self.assertIn("barcode3", self.controller.grouped_documents.keys())
+        self.assertEqual(len(self.controller.grouped_documents["barcode3"]), 4)
+
+        self.assertNotIn("blank", self.controller.grouped_documents.keys())
+
+        self.assertIn("qrcode1", self.controller.grouped_documents.keys())
+        self.assertEqual(len(self.controller.grouped_documents["qrcode1"]), 16)
+
+        self.assertIn("qrcode2", self.controller.grouped_documents.keys())
+        self.assertEqual(len(self.controller.grouped_documents["qrcode2"]), 16)
+
+        self.assertIn("qrcode3", self.controller.grouped_documents.keys())
+        self.assertEqual(len(self.controller.grouped_documents["qrcode3"]), 15)
+
+        self.assertIn("qrcode4", self.controller.grouped_documents.keys())
+        self.assertEqual(len(self.controller.grouped_documents["qrcode4"]), 17)
 
     def test_rename_document(self):
         files = [
