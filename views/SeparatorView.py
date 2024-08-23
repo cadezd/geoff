@@ -302,9 +302,10 @@ class SeparatorView(Column):
                     controls=[
                         ft.Text("QR koda"),
                         ft.Text("BAR koda"),
+                        ft.Text("Ročno"),
                     ],
                     height=40,
-                    tooltip="Ločevanje datotek po BAR ali QR kodi",
+                    tooltip="Ločevanje datotek po QR kodi, BAR kodi ali Ročno",
                     on_change=lambda e: file_separator_controller.set_setting("DEFAULT_SEPARATE", int(e.data)),
                 )
             ],
@@ -547,14 +548,14 @@ class SeparatorView(Column):
                 ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state() else ft.colors.GREY_300
             self.active_document_placeholder.images_row_container.bgcolor = ft.colors.GREY_300
             self.active_document_placeholder.zoom_in_out_full_button.style.bgcolor = ft.colors.GREY_300
-            self.page.update()
+            self.active_document_placeholder.update()
 
         self.active_document_placeholder = document_placeholder
         self.active_document_placeholder.text_field.bgcolor = \
             ft.colors.RED_200 if self.active_document_placeholder.is_in_error_state() else ft.colors.BLUE_GREY_100
         self.active_document_placeholder.images_row_container.bgcolor = ft.colors.BLUE_GREY_100
         self.active_document_placeholder.zoom_in_out_full_button.style.bgcolor = ft.colors.BLUE_GREY_100
-        self.page.update()
+        self.active_document_placeholder.update()
 
     async def delete_selected_images(self, e: ControlEvent | None) -> None:
         """
@@ -807,6 +808,8 @@ class SeparatorView(Column):
 
         # Clear the list view
         self.list_view.controls.clear()
+        self.document_placeholders.clear()
+        self.active_document_placeholder = None
 
         # Display the grouped documents in the list view
         for document_name, images in file_separator_controller.grouped_documents.items():
