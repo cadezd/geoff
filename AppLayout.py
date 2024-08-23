@@ -2,8 +2,8 @@ import flet as ft
 from flet import Row, UserControl, VerticalDivider, View
 
 from componetns.Navigation import Navigation
+from views.AccountingView import AccountingView
 from views.HomeView import HomeView
-from views.PaymentsView import PaymentsView
 from views.SeparatorView import SeparatorView
 
 
@@ -14,11 +14,11 @@ class AppLayout(Row):
         self.app = app
         self.page = page
 
-        # Components
+        # Components and views
         self.navigation = Navigation(self.page)
         self.home_view = HomeView(self.page)
         self.separator_view = SeparatorView(self.page)
-        # self.payments_view = PaymentsView(self.page)
+        self.accounting_view = AccountingView(self.page)
 
         # Default active view
         self._active_view = self.home_view
@@ -56,8 +56,8 @@ class AppLayout(Row):
         self.navigation.update()
         self.page.update()
 
-    # def set_payments_view(self) -> None:
-    #    self.active_view = self.payments_view
-    #    self.navigation.navigation_rail.selected_index = 2
-    #    self.navigation.update()
-    #    self.page.update()
+    def set_accounting_view(self) -> None:
+        self.active_view = self.accounting_view
+        self.navigation.navigation_rail.selected_index = 2
+        self.navigation.update()
+        self.page.update()
