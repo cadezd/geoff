@@ -1,5 +1,6 @@
 import os.path
 from math import pi
+from random import randint
 
 import flet as ft
 from flet import Column, Row, Container, Image, Text, TextSpan, ElevatedButton
@@ -68,6 +69,11 @@ class HomeView(Column):
         :param e:
         :return:
         """
+
+        # There is one in six chance that you will encounter a surprise
+        if randint(1, 6) == 3:
+            self.page.launch_url('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+
         if self.counter % 3 == 0:
             self.geoff.offset = ft.transform.Offset(0, 0)
         elif self.counter % 3 == 1:
